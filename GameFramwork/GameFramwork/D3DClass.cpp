@@ -7,10 +7,16 @@
 
 D3DClass::D3DClass()
 {
+	vsyncEnabled = false;
+
 	device = nullptr;
 	deviceContext = nullptr;
 	swapChain = nullptr;
 	renderTargetView = nullptr;
+	depthBuffer = nullptr;
+	//depthStencilState = nullptr;
+	depthStencilView = nullptr;
+	rasterizerState = nullptr;
 }
 
 D3DClass::D3DClass(const D3DClass &)
@@ -24,6 +30,9 @@ D3DClass::~D3DClass()
 bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullCreen, float screenDepth, float screenNear)
 {
 	HRESULT hr;
+
+	vsyncEnabled = vsync;
+
 	const D3D_FEATURE_LEVEL featureLevels[] = { 
 		D3D_FEATURE_LEVEL_11_1,
 		D3D_FEATURE_LEVEL_11_0,
@@ -70,6 +79,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	backBufferPtr = nullptr;
 	if (FAILED(hr))
 		return false;
+	// Set render target
+	deviceContext->OMSetRenderTargets(1, &renderTargetView, NULL);
 	
 	// Create depth buffer
 	D3D11_TEXTURE2D_DESC depthBufferDesc;
@@ -100,16 +111,144 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 		return false;
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
+	deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+
+	// Setup the raster descripthion which will determine how and what polygons will be drawn
+	D3D11_RASTERIZER_DESC rasterDesc;
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+	// Create the rasterizer state
+	hr = device->CreateRasterizerState(&rasterDesc, &rasterizerState);
+	if(FAILED(hr))
+		return false;
+	// Set the rasterizer state
+	deviceContext->RSSetState(rasterizerState);
+
+	// Setup the viewport for rendering
+	D3D11_VIEWPORT viewPort[1];
+	viewPort[0].Width = screenWidth;
+	viewPort[0].Height = screenHeight;
+	viewPort[0].TopLeftX = 0.0f;
+	viewPort[0].TopLeftY = 0.0f;
+	viewPort[0].MinDepth = 0.0f;
+	viewPort[0].MaxDepth = 1.0f;
+	// Create the viewport
+	deviceContext->RSSetViewports(_countof(viewPort), viewPort);
+
+	return true;
 }
 
 void D3DClass::Shutdown()
 {
+	// Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
+	if(swapChain)
+	{
+		swapChain->SetFullscreenState(false, NULL);
+	}
+
+	if(deviceContext)
+	{
+		deviceContext->ClearState();
+	}
+
+	if(rasterizerState)
+	{
+		rasterizerState->Release();
+		rasterizerState = nullptr;
+	}
+
+	if(depthStencilView)
+	{
+		depthStencilView->Release();
+		depthStencilView = nullptr;
+	}
+
+/*	if(depthStencilState)
+	{
+		depthStencilState->Release();
+		depthStencilState = nullptr;
+	}
+*/
+	if(depthBuffer)
+	{
+		depthBuffer->Release();
+		depthBuffer = nullptr;
+	}
+
+	if(renderTargetView)
+	{
+		renderTargetView->Release();
+		renderTargetView = nullptr;
+	}
+
+	if(deviceContext)
+	{
+		deviceContext->Release();
+		deviceContext = nullptr;
+	}
+
+	if(device)
+	{
+		device->Release();
+		device = nullptr;
+	}
+
+	if(swapChain)
+	{
+		swapChain->Release();
+		swapChain = nullptr;
+	}
+
+	return;
 }
 
-void D3DClass::BeginScene(float, float, float, float)
+// The beginning of each frame.
+void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 {
+	// Setup the color to clear the buffer to
+	float color[4] = { red,green,blue,alpha };
+
+	// Clear the back buffer
+	deviceContext->ClearRenderTargetView(renderTargetView, color);
+
+	// Clear the depth buffer
+	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	return;
 }
 
+// The end of each frame.
 void D3DClass::EndScene()
 {
+	// Present the back buffer to the screen since rendering is complete.
+	if(vsyncEnabled)
+	{
+		// Lock to screen refresh rate.
+		swapChain->Present(1, 0);
+	}
+	else
+	{
+		// Present as fast as possible.
+		swapChain->Present(0, 0);
+	}
+
+	return;
+}
+
+ID3D11Device * D3DClass::GetDevice()
+{
+	return device;
+}
+
+ID3D11DeviceContext * D3DClass::GetDeviceContext()
+{
+	return deviceContext;
 }

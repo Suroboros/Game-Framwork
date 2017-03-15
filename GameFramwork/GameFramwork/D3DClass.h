@@ -32,15 +32,21 @@ public:
 	void BeginScene(float, float, float, float);
 	void EndScene();
 
+	ID3D11Device* GetDevice();
+	ID3D11DeviceContext* GetDeviceContext();
+
 private:
+	bool vsyncEnabled;
+
 	ID3D11Device* device;
 	ID3D11DeviceContext* deviceContext;
 	IDXGISwapChain* swapChain;
 	ID3D11RenderTargetView* renderTargetView;
 	D3D_FEATURE_LEVEL featureLevelSupported;
 	ID3D11Texture2D* depthBuffer;
-	ID3D11DepthStencilState* depthStencilState;
+	//ID3D11DepthStencilState* depthStencilState;
 	ID3D11DepthStencilView* depthStencilView;
+	ID3D11RasterizerState* rasterizerState;
 };
 
 #endif 

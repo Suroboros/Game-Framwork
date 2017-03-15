@@ -8,6 +8,7 @@
 
 // Inludes
 #include <Windows.h>
+#include "D3DClass.h"
 
 /////////////
 // GLOBALS //
@@ -32,7 +33,9 @@ public:
 private:
 	bool Render();
 
+private:
+	D3DClass* D3DObject;
 
 };
 
-#endif //
+#endif 

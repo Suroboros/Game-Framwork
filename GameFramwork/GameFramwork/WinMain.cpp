@@ -60,7 +60,7 @@ bool WindowMain::Initialize()
 	{
 		return false;
 	}
-	graphicSystem->Initialize(hwnd);
+	graphicSystem->Initialize(hwnd, 800, 600);
 
 	return true;
 }
@@ -125,7 +125,7 @@ bool WindowMain::InitializeWindows()
 		0,                              // Optional window styles.
 		className,                     // Window class
 		L"Windows",                     // Window text
-		WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_POPUP,            // Window style
+		WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,            // Window style
 
 										// Size and position
 		posX, posY, screenWidth, screenHeight,
