@@ -33,6 +33,67 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 	vsyncEnabled = vsync;
 
+	// Create a graphics interface factory
+	IDXGIFactory* factory = nullptr;
+	hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
+	if(FAILED(hr))
+		return false;
+
+	// Get the graphics interface(video card)
+	IDXGIAdapter* adapter = nullptr;
+	if(factory->EnumAdapters(0, &adapter) == DXGI_ERROR_NOT_FOUND)
+		return false;
+
+	// Enumerate the primary adapter output(monitor).
+	IDXGIOutput* adapterOutput = nullptr;
+	if(adapter->EnumOutputs(0, &adapterOutput) == DXGI_ERROR_NOT_FOUND)
+		return false;
+
+	// Get the number of modes that fit the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output(monitor).
+	UINT numModes = 0;
+	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
+	if(FAILED(hr))
+		return false;
+
+	// Create a list to hold all possible modes for this monitor/video card combination and fill the list.
+	DXGI_MODE_DESC* displayModeList = new DXGI_MODE_DESC[numModes];
+	if(!displayModeList)
+		return false;
+	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
+	if(FAILED(hr))
+		return false;
+
+	// Find matched screen width and height, then store the numerator and denominator of the refresh rate.
+	UINT numerator, denominator;
+	for(int i = 0; i < static_cast<int>(numModes); ++i)
+	{
+		if(displayModeList[i].Width == static_cast<UINT>(screenWidth))
+		{
+			if(displayModeList[i].Height == static_cast<UINT>(screenHeight))
+			{
+				numerator = displayModeList[i].RefreshRate.Numerator;
+				denominator = displayModeList[i].RefreshRate.Denominator;
+			}
+		}
+	}
+	
+	// Release the display mode list
+	delete[] displayModeList;
+	displayModeList = nullptr;
+
+	// Release the adapter output
+	adapterOutput->Release();
+	adapterOutput = nullptr;
+
+	// Release the adapter
+	adapter->Release();
+	adapter = nullptr;
+
+	// Release the factory
+	factory->Release();
+	factory = nullptr;
+
+	// Setup the feature level
 	const D3D_FEATURE_LEVEL featureLevels[] = { 
 		D3D_FEATURE_LEVEL_11_1,
 		D3D_FEATURE_LEVEL_11_0,
@@ -51,8 +112,16 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	swDesc.BufferDesc.Width = screenWidth;
 	swDesc.BufferDesc.Height = screenHeight;
 	swDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swDesc.BufferDesc.RefreshRate.Numerator = 60;
-	swDesc.BufferDesc.RefreshRate.Denominator = 1;
+	if(vsyncEnabled)
+	{
+		swDesc.BufferDesc.RefreshRate.Numerator = numerator;
+		swDesc.BufferDesc.RefreshRate.Denominator = denominator;
+	}
+	else
+	{
+		swDesc.BufferDesc.RefreshRate.Numerator = 0;
+		swDesc.BufferDesc.RefreshRate.Denominator = 1;
+	}
 	swDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -134,8 +203,8 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 
 	// Setup the viewport for rendering
 	D3D11_VIEWPORT viewPort[1];
-	viewPort[0].Width = screenWidth;
-	viewPort[0].Height = screenHeight;
+	viewPort[0].Width = static_cast<FLOAT>(screenWidth);
+	viewPort[0].Height = static_cast<FLOAT>(screenHeight);
 	viewPort[0].TopLeftX = 0.0f;
 	viewPort[0].TopLeftY = 0.0f;
 	viewPort[0].MinDepth = 0.0f;

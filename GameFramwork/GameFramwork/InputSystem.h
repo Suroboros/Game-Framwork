@@ -1,3 +1,4 @@
+#pragma once
 /////////////////////////////////////
 // InputSystem.h
 // Input system.
@@ -19,10 +20,10 @@ public:
 
 	void Initialize();
 
-	void KeyDown(unsigned int);
-	void KeyUp(unsigned int);
+	void KeyDown(unsigned int input);
+	void KeyUp(unsigned int input);
 
-	bool IsKeyDown(unsigned int);
+	bool IsKeyDown(unsigned int input);
 
 private:
 	bool keys[256];

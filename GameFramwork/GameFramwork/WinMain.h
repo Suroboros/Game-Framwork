@@ -38,9 +38,10 @@ public:
 	WindowMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow);
 
 	bool Initialize();
-	bool InitializeWindows();
+	bool InitializeWindows(int&, int&);
 	void Run();
 	void Shutdown();
+	void ShutdownWindows();
 	
 	// Frame processing.
 	bool Frame();

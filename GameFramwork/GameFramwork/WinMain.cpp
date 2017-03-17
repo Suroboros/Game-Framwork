@@ -40,9 +40,10 @@ WindowMain::WindowMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdL
 bool WindowMain::Initialize()
 {
 	bool result;
+	int screenWidth = 0, screenHeight = 0;
 	
 	// Initialize windows.
-	result = InitializeWindows();
+	result = InitializeWindows(screenWidth, screenHeight);
 	if (!result)
 		return false;
 
@@ -60,14 +61,13 @@ bool WindowMain::Initialize()
 	{
 		return false;
 	}
-	graphicSystem->Initialize(hwnd, 800, 600);
+	graphicSystem->Initialize(hwnd, screenWidth, screenHeight);
 
 	return true;
 }
 
-bool WindowMain::InitializeWindows()
+bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 {
-	int screenWidth, screenHeight;
 	int posX, posY;
 	// Full screen setting.
 	DEVMODE dmScreenSettings;
@@ -177,15 +177,7 @@ void WindowMain::Run()
 
 void WindowMain::Shutdown()
 {
-	// Show the mouse cursor.
-	ShowCursor(true);
-
-	// Fix the display settings if leaving full screen mode.
-	if (FULLSCREEN)
-	{
-		ChangeDisplaySettings(NULL, 0);
-	}
-
+	
 	// Release graphic system.
 	if (graphicSystem)
 	{
@@ -201,6 +193,23 @@ void WindowMain::Shutdown()
 		inputSystem = nullptr;
 	}
 
+	ShutdownWindows();
+
+	return;
+
+}
+
+void WindowMain::ShutdownWindows()
+{
+	// Show the mouse cursor.
+	ShowCursor(true);
+
+	// Fix the display settings if leaving full screen mode.
+	if(FULLSCREEN)
+	{
+		ChangeDisplaySettings(NULL, 0);
+	}
+
 	// Remove Window.
 	DestroyWindow(hwnd);
 	hwnd = nullptr;
@@ -212,6 +221,7 @@ void WindowMain::Shutdown()
 	// Release the pointer to this class.
 	ApplicationHandle = nullptr;
 
+	return;
 }
 
 bool WindowMain::Frame()

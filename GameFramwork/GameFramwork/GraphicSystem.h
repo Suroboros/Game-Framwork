@@ -9,7 +9,9 @@
 // Inludes
 #include <Windows.h>
 #include "D3DClass.h"
+#include "Camera.h"
 
+#pragma once
 /////////////
 // GLOBALS //
 /////////////
@@ -35,6 +37,9 @@ private:
 
 private:
 	D3DClass* D3DObject;
+
+public:
+	Camera::spCamera camera[4]; //camera
 
 };
 

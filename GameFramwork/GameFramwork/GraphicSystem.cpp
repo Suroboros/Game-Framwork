@@ -39,6 +39,10 @@ bool GraphicSystem::Initialize(HWND hwnd, int screenWidth, int screenHight)
 		return false;
 	}
 
+	// Create default camera.
+	camera[0] = Camera::Create(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 
+		ToRadian(60.0f), static_cast<float>(screenWidth) / static_cast<float>(screenHight), 10.0f, 300.0f);
+	camera[3] = camera[2] = camera[1] = camera[0];
 	return true;
 }
 
@@ -74,6 +78,8 @@ bool GraphicSystem::Render()
 
 	//Clear the buffers to begin the scene
 	D3DObject->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+
+	camera[0]->Update();
 
 	//Present the rendered scene to the screen
 	D3DObject->EndScene();
