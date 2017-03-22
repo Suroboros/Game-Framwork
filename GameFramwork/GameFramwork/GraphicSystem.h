@@ -1,3 +1,4 @@
+#pragma once
 /////////////////////////////////////
 // GraphicSystem.h
 // Graphic system.
@@ -10,6 +11,7 @@
 #include <Windows.h>
 #include "D3DClass.h"
 #include "Camera.h"
+#include "Mesh.h"
 
 #pragma once
 /////////////
@@ -40,7 +42,7 @@ private:
 
 public:
 	Camera::spCamera camera[4]; //camera
-
+	Model* model;
 };
 
 #endif 

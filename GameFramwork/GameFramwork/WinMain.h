@@ -1,3 +1,4 @@
+#pragma once
 /////////////////////////////////////
 // WinMain.h
 // Main windows

@@ -9,6 +9,7 @@
 GraphicSystem::GraphicSystem()
 {
 	D3DObject = nullptr;
+	model = nullptr;
 }
 
 GraphicSystem::GraphicSystem(const GraphicSystem &)
@@ -43,12 +44,29 @@ bool GraphicSystem::Initialize(HWND hwnd, int screenWidth, int screenHight)
 	camera[0] = Camera::Create(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 
 		ToRadian(60.0f), static_cast<float>(screenWidth) / static_cast<float>(screenHight), 10.0f, 300.0f);
 	camera[3] = camera[2] = camera[1] = camera[0];
+
+	// Create and inlitialize the mesh
+	model = new Model;
+	result = model->Initialize(D3DObject->GetDevice(), "./cube.obj");
+	if(!result)
+	{
+		MessageBox(hwnd, L"Could not initialize the mesh object.", L"Error", MB_OK);
+		return false;
+	}
 	return true;
 }
 
 void GraphicSystem::Shutdown()
 {
-	//Release the Direct3D object
+	// Release the mesh object
+	if(model)
+	{
+		model->Shutdown();
+		delete model;
+		model = nullptr;
+	}
+
+	// Release the Direct3D object
 	if(D3DObject)
 	{
 		D3DObject->Shutdown();
@@ -80,6 +98,9 @@ bool GraphicSystem::Render()
 	D3DObject->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	camera[0]->Update();
+
+	// Render mesh
+	model->Render(D3DObject->GetDeviceContext());
 
 	//Present the rendered scene to the screen
 	D3DObject->EndScene();

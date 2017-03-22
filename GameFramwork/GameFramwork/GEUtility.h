@@ -4,14 +4,21 @@
 // Utility tools
 /////////////////////////////////////
 
+#ifndef _GEUTILITY_H_
+#define _GEUTILITY_H_
+
 // Include
 #include <DirectXMath.h>
 using namespace DirectX;
 
-#ifndef _GEUTILITY_H_
-#define _GEUTILITY_H_
-
 float ToRadian(const float);
 float ToDegree(const float);
+
+struct Point
+{
+	float x;
+	float y;
+	float z;
+};
 
 #endif // !_GEUTILITY_H_
