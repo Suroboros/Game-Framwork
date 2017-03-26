@@ -212,6 +212,16 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	// Create the viewport
 	deviceContext->RSSetViewports(_countof(viewPort), viewPort);
 
+	// Setup the projection matrix
+	float fieldOfView = XM_PI / 4.0f;
+	float screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+	XMStoreFloat4x4(&projectionMatrix, XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth));
+
+	// Initialize the world matrix
+	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
+
+	// Create the orthographic projection matrix for 2D rendering
+	XMStoreFloat4x4(&orthoMatrix, XMMatrixOrthographicLH(static_cast<float>(screenWidth), static_cast<float>(screenHeight), screenNear, screenDepth));
 	return true;
 }
 
@@ -320,4 +330,19 @@ ID3D11Device * D3DClass::GetDevice()
 ID3D11DeviceContext * D3DClass::GetDeviceContext()
 {
 	return deviceContext;
+}
+
+void D3DClass::GetWorldMatrix(XMMATRIX & world)
+{
+	world = XMLoadFloat4x4(&worldMatrix);
+}
+
+void D3DClass::GetProjectionMatrix(XMMATRIX & projection)
+{
+	projection = XMLoadFloat4x4(&projectionMatrix);
+}
+
+void D3DClass::GetOrthoMatrix(XMMATRIX & ortho)
+{
+	ortho = XMLoadFloat4x4(&orthoMatrix);
 }

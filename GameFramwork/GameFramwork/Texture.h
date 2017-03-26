@@ -21,12 +21,19 @@ public:
 	Texture(Texture& texture);
 	~Texture();
 
-	bool Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, string srcPath);
+	bool Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, TCHAR* srcPath);
 	void ShutDown();
+
+	bool LoadImageFromFile(TCHAR* srcPath);
 
 	ID3D11ShaderResourceView* GetTexture();
 
 private:
+	// Image infor
+	unsigned char* imgBuffer;
+	UINT width, height;
+	UINT stride;
+
 	ID3D11Texture2D* texture;
 	ID3D11ShaderResourceView* textureView;
 	//unsigned char* imageData;

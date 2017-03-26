@@ -54,6 +54,10 @@ Texture::Texture()
 {
 	texture = nullptr;
 	textureView = nullptr;
+	imgBuffer = nullptr;
+	width = 0;
+	height = 0;
+	stride = 0;
 }
 
 Texture::Texture(Texture & texture)
@@ -64,112 +68,12 @@ Texture::~Texture()
 {
 }
 
-bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContext, string srcPath)
+bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContext, TCHAR* srcPath)
 {
-	bool result;
 	HRESULT hr;
 
-	// Initialize COM
-	CoInitialize(NULL);
-
-	// Create the imageing factory interface
-	IWICImagingFactory* imgFactory = nullptr;
-	hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), (LPVOID*)&imgFactory);
-	if(FAILED(hr))
-		return false;
-
-	IWICBitmapDecoder* imgDecoder = nullptr;
-	hr = imgFactory->CreateDecoderFromFilename(L"./1.bmp", NULL, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &imgDecoder);
-	if(FAILED(hr))
-		return false;
-
-	// Get frame from decoder
-	IWICBitmapFrameDecode* imgFrame = nullptr;
-	hr = imgDecoder->GetFrame(0, &imgFrame);
-	if(FAILED(hr))
-		return false;
-
-	// Get the width and height of image
-	UINT width, height;
-	hr = imgFrame->GetSize(&width, &height);
-	if(FAILED(hr))
-		return false;
-	assert(width > 0 && height > 0);
-
-	// Get the pixel format of the image.
-	WICPixelFormatGUID pixFormat;
-	hr = imgFrame->GetPixelFormat(&pixFormat);
-	if(FAILED(hr))
-		return false;
-
-	// Convert pixel format to dxgi format
-	DXGI_FORMAT dxgiFormat = DXGI_FORMAT_UNKNOWN;
-	for(int i = 0; i < _countof(transList); ++i)
-	{
-		if(memcmp(&transList[i].pix, &pixFormat, sizeof(pixFormat)) == 0)
-			dxgiFormat = transList[i].dxgi;
-	}
-
-	IWICFormatConverter* fc = nullptr;
-	// Change to 32 bits data
-	if(dxgiFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
-	{
-		hr = imgFactory->CreateFormatConverter(&fc);
-		if(FAILED(hr))
-			return false;
-
-		hr = fc->Initialize(imgFrame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom);
-		if(FAILED(hr))
-			return false;
-	}
-
-	// Get bpp of the image
-	IWICComponentInfo* cinfo = nullptr;
-	if(FAILED(imgFactory->CreateComponentInfo(pixFormat, &cinfo)))
-		return false;
-
-	WICComponentType type;
-	if(FAILED(cinfo->GetComponentType(&type)))
-		return 0;
-
-	if(type != WICPixelFormat)
-		return 0;
-
-	IWICPixelFormatInfo* pfinfo;
-	if(FAILED(cinfo->QueryInterface(__uuidof(IWICPixelFormatInfo), reinterpret_cast<void**>(&pfinfo))))
-		return 0;
-
-	UINT bpp;
-	if(FAILED(pfinfo->GetBitsPerPixel(&bpp)))
-		return 0;
-
-	// Copy image data
-	//unsigned char* imgBuffer = new unsigned char[width*height * 4];
-	unsigned char* imgBuffer = new unsigned char[width*height * bpp];
-	UINT stride = (width * bpp + 7) / 8;
-	UINT size = stride*height;
-	hr = imgFrame->CopyPixels(0, stride, size, imgBuffer);
-	if(FAILED(hr))
-		return false;
-
-	// Release resource
-	pfinfo->Release();
-	pfinfo = nullptr;
-
-	cinfo->Release();
-	cinfo = nullptr;
-
-	fc->Release();
-	fc = nullptr;
-
-	imgFrame->Release();
-	imgFrame = nullptr;
-
-	imgDecoder->Release();
-	imgDecoder = nullptr;
-
-	imgFactory->Release();
-	imgFactory = nullptr;
+	// Load image
+	bool result = LoadImageFromFile(srcPath);
 
 	// Setup the description of the texture
 	D3D11_TEXTURE2D_DESC texDesc;
@@ -230,6 +134,115 @@ void Texture::ShutDown()
 		texture->Release();
 		texture = nullptr;
 	}
+}
+
+bool Texture::LoadImageFromFile(TCHAR * srcPath)
+{
+	HRESULT hr;
+
+	// Initialize COM
+	CoInitialize(NULL);
+
+	// Create the imageing factory interface
+	IWICImagingFactory* imgFactory = nullptr;
+	hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, __uuidof(IWICImagingFactory), (LPVOID*)&imgFactory);
+	if(FAILED(hr))
+		return false;
+
+	IWICBitmapDecoder* imgDecoder = nullptr;
+	hr = imgFactory->CreateDecoderFromFilename(srcPath, NULL, GENERIC_READ, WICDecodeMetadataCacheOnDemand, &imgDecoder);
+	if(FAILED(hr))
+		return false;
+
+	// Get frame from decoder
+	IWICBitmapFrameDecode* imgFrame = nullptr;
+	hr = imgDecoder->GetFrame(0, &imgFrame);
+	if(FAILED(hr))
+		return false;
+
+	// Get the width and height of image
+	hr = imgFrame->GetSize(&width, &height);
+	if(FAILED(hr))
+		return false;
+	assert(width > 0 && height > 0);
+
+	// Get the pixel format of the image.
+	WICPixelFormatGUID pixFormat;
+	hr = imgFrame->GetPixelFormat(&pixFormat);
+	if(FAILED(hr))
+		return false;
+
+	// Convert pixel format to dxgi format
+	DXGI_FORMAT dxgiFormat = DXGI_FORMAT_UNKNOWN;
+	for(int i = 0; i < _countof(transList); ++i)
+	{
+		if(memcmp(&transList[i].pix, &pixFormat, sizeof(pixFormat)) == 0)
+			dxgiFormat = transList[i].dxgi;
+	}
+
+	IWICFormatConverter* fc = nullptr;
+	// Change to 32 bits data
+	if(dxgiFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
+	{
+		hr = imgFactory->CreateFormatConverter(&fc);
+		if(FAILED(hr))
+			return false;
+
+		hr = fc->Initialize(imgFrame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom);
+		if(FAILED(hr))
+			return false;
+	}
+
+	// Get bpp of the image
+	IWICComponentInfo* cinfo = nullptr;
+	if(FAILED(imgFactory->CreateComponentInfo(pixFormat, &cinfo)))
+		return false;
+
+	WICComponentType type;
+	if(FAILED(cinfo->GetComponentType(&type)))
+		return 0;
+
+	if(type != WICPixelFormat)
+		return 0;
+
+	IWICPixelFormatInfo* pfinfo;
+	if(FAILED(cinfo->QueryInterface(__uuidof(IWICPixelFormatInfo), reinterpret_cast<void**>(&pfinfo))))
+		return 0;
+
+	UINT bpp;
+	if(FAILED(pfinfo->GetBitsPerPixel(&bpp)))
+		return 0;
+
+	// Copy image data
+	//unsigned char* imgBuffer = new unsigned char[width*height * 4];
+	imgBuffer = new unsigned char[width*height * bpp];
+	stride = (width * bpp + 7) / 8;
+	UINT size = stride*height;
+	hr = imgFrame->CopyPixels(0, stride, size, imgBuffer);
+	if(FAILED(hr))
+		return false;
+
+	// Release resource
+	pfinfo->Release();
+	pfinfo = nullptr;
+
+	cinfo->Release();
+	cinfo = nullptr;
+
+	fc->Release();
+	fc = nullptr;
+
+	imgFrame->Release();
+	imgFrame = nullptr;
+
+	imgDecoder->Release();
+	imgDecoder = nullptr;
+
+	imgFactory->Release();
+	imgFactory = nullptr;
+
+
+	return true;
 }
 
 ID3D11ShaderResourceView * Texture::GetTexture()

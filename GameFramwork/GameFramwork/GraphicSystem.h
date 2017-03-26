@@ -12,6 +12,8 @@
 #include "D3DClass.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Light.h"
+#include "LightShader.h"
 
 #pragma once
 /////////////
@@ -39,10 +41,13 @@ private:
 
 private:
 	D3DClass* D3DObject;
+	LightShader* lightShader;
 
 public:
 	Camera::spCamera camera[4]; //camera
 	Model* model;
+
+	Light* light;
 };
 
 #endif 

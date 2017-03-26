@@ -36,6 +36,10 @@ public:
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
 
+	void GetWorldMatrix(XMMATRIX& world);
+	void GetProjectionMatrix(XMMATRIX& projection);
+	void GetOrthoMatrix(XMMATRIX& ortho);
+
 private:
 	bool vsyncEnabled;
 
@@ -48,6 +52,9 @@ private:
 	//ID3D11DepthStencilState* depthStencilState;
 	ID3D11DepthStencilView* depthStencilView;
 	ID3D11RasterizerState* rasterizerState;
+	XMFLOAT4X4 worldMatrix;
+	XMFLOAT4X4 projectionMatrix;
+	XMFLOAT4X4 orthoMatrix;
 };
 
 #endif 
