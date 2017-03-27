@@ -41,7 +41,7 @@ public:
 
 	bool Initialize(ID3D11Device* device, HWND hwnd);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX& world, XMMATRIX& view, XMMATRIX& projection, ID3D11ShaderResourceView* texture, XMFLOAT4 color, XMFLOAT3 direction);
+	bool Render(ID3D11DeviceContext* deviceContext, const int indexCount, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, const XMFLOAT4 color, const XMFLOAT3 direction);
 
 private:
 	ID3D11VertexShader* vertexShader;
@@ -55,8 +55,8 @@ private:
 	void ShutdownShader();
 	void OutputShaderErrorMessage(ID3DBlob* errorMsg, HWND hwnd, TCHAR* shaderPath);
 
-	bool SetShaderParameter(ID3D11DeviceContext* deviceContex, XMMATRIX& world, XMMATRIX& view, XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, XMFLOAT4 color, XMFLOAT3 direction);
-	void RenderShader(ID3D11DeviceContext* deviceContext, int indexCount);
+	bool SetShaderParameter(ID3D11DeviceContext* deviceContex, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction);
+	void RenderShader(ID3D11DeviceContext* deviceContext, const int indexCount);
 };
 
 #endif // !_LIGHT_SHADER_H_

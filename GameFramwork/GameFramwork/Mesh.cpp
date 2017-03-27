@@ -174,7 +174,10 @@ void Model::Render(ID3D11DeviceContext * deviceContext)
 
 int Model::GetIndexCount()
 {
-	return 36;
+	int indexCnt = 0;
+	for(auto mesh : model)
+		indexCnt += mesh->indices.size();
+	return indexCnt;
 }
 
 ID3D11ShaderResourceView * Model::GetTexture()
@@ -383,6 +386,19 @@ bool Model::WriteMesh()
 	}
 	if(model.empty())
 		return false;
+
+	// Clear objData
+	objData.v.clear();
+	objData.vn.clear();
+	objData.vt.clear();
+	objData.mtllib = "";
+	for(auto group : objData.groups)
+	{
+		for(auto face : group.faces)
+			face.vertices.clear();
+		group.faces.clear();
+	}
+	objData.groups.clear();
 
 	return true;
 }

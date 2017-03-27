@@ -157,14 +157,21 @@ void WindowMain::Run()
 	// Run the message loop.
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
-	while (GetMessage(&msg, NULL, 0, 0))
+
+	// Loop
+	bool runFlag = true;
+	while (runFlag)
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		// Get the windows messages
+		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 
 		// If windows signals to quit then exit out.
-		if (msg.message == WM_QUIT)
-			break;
+		if(msg.message == WM_QUIT)
+			runFlag = false;
 		else
 		{
 			bool result = Frame();

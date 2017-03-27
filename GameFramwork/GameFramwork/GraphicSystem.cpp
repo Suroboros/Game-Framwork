@@ -44,13 +44,13 @@ bool GraphicSystem::Initialize(HWND hwnd, int screenWidth, int screenHight)
 
 	// Create default camera.
 	float a = ToRadian(30.0f);
-	camera[0] = Camera::Create(XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 1.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 
-		ToRadian(30.0f), static_cast<float>(screenWidth) / static_cast<float>(screenHight), 10.0f, 300.0f);
+	camera[0] = Camera::Create(XMFLOAT3(0.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 
+		ToRadian(120.0f), static_cast<float>(screenWidth) / static_cast<float>(screenHight), 1.0f, 300.0f);
 	camera[3] = camera[2] = camera[1] = camera[0];
 
 	// Create and initialize the mesh
 	model = new Model;
-	result = model->Initialize(D3DObject->GetDevice(), D3DObject->GetDeviceContext(), _T("./cube.obj"));
+	result = model->Initialize(D3DObject->GetDevice(), D3DObject->GetDeviceContext(), _T("./kuma.obj"));
 	if(!result)
 	{
 		MessageBox(hwnd, _T("Could not initialize the mesh object."), _T("Error"), MB_OK);
@@ -74,7 +74,7 @@ bool GraphicSystem::Initialize(HWND hwnd, int screenWidth, int screenHight)
 		return false;
 
 	light->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	light->SetDirection(0.0f, 0.0f, 1.0f);
+	light->SetDirection(0.0f, -1.0f, 1.0f);
 
 	return true;
 }
@@ -147,13 +147,15 @@ bool GraphicSystem::Render()
 	r += (float)XM_PI*-0.005f;
 	world = XMMatrixRotationY(r);
 	// Render mesh
-	model->Render(D3DObject->GetDeviceContext());
+	//model->Render(D3DObject->GetDeviceContext());
 	int i = model->GetIndexCount();
 	// Render the model using the light shader
 	for(auto mesh : model->model)
 	{
-		result = lightShader->Render(D3DObject->GetDeviceContext(), mesh->indices.size() , world, view, projection, model->GetTexture(), light->GetColor(), light->GetDirection());
+		mesh->RenderBuffers(D3DObject->GetDeviceContext());
+		result = lightShader->Render(D3DObject->GetDeviceContext(), mesh->indices.size(), world, view, projection, model->GetTexture(), light->GetColor(), light->GetDirection());
 	}
+	
 	//Present the rendered scene to the screen
 	D3DObject->EndScene();
 	return true;

@@ -33,7 +33,7 @@ void LightShader::Shutdown()
 	ShutdownShader();
 }
 
-bool LightShader::Render(ID3D11DeviceContext * deviceContext, int indexCount, XMMATRIX & world, XMMATRIX & view, XMMATRIX & projection, ID3D11ShaderResourceView * texture, XMFLOAT4 color, XMFLOAT3 direction)
+bool LightShader::Render(ID3D11DeviceContext * deviceContext, const int indexCount, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & projection, ID3D11ShaderResourceView * texture, const XMFLOAT4 color, const XMFLOAT3 direction)
 {
 	bool result;
 
@@ -250,14 +250,14 @@ void LightShader::OutputShaderErrorMessage(ID3DBlob * errorMsg, HWND hwnd, TCHAR
 
 }
 
-bool LightShader::SetShaderParameter(ID3D11DeviceContext * deviceContex, XMMATRIX & world, XMMATRIX & view, XMMATRIX & project, ID3D11ShaderResourceView * shaderRsrcView, XMFLOAT4 color, XMFLOAT3 direction)
+bool LightShader::SetShaderParameter(ID3D11DeviceContext * deviceContex, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & project, ID3D11ShaderResourceView * shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction)
 {
 	HRESULT hr;
 
 	// Transpose the matrices
-	world = XMMatrixTranspose(world);
-	view = XMMatrixTranspose(view);
-	project = XMMatrixTranspose(project);
+	auto worldMat = XMMatrixTranspose(world);
+	auto viewMat = XMMatrixTranspose(view);
+	auto projectMat = XMMatrixTranspose(project);
 
 	// Set matrices parameter
 	// Lock the constant buffer
@@ -271,9 +271,9 @@ bool LightShader::SetShaderParameter(ID3D11DeviceContext * deviceContex, XMMATRI
 	matrixData = (MaxtrixBufferType*)mappedResource.pData;
 
 	// Copy the matrices
-	matrixData->world = world;
-	matrixData->view = view;
-	matrixData->projection = project;
+	matrixData->world = worldMat;
+	matrixData->view = viewMat;
+	matrixData->projection = projectMat;
 
 	// Unlock the constant buffer
 	deviceContex->Unmap(matrixBuffer, 0);
@@ -312,7 +312,7 @@ bool LightShader::SetShaderParameter(ID3D11DeviceContext * deviceContex, XMMATRI
 	return true;
 }
 
-void LightShader::RenderShader(ID3D11DeviceContext * deviceContext, int indexCount)
+void LightShader::RenderShader(ID3D11DeviceContext * deviceContext, const int indexCount)
 {
 	// Set the vertex input layout
 	deviceContext->IASetInputLayout(layout);

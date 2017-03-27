@@ -66,7 +66,7 @@ XMFLOAT3 Camera::GetFocus()
 
 void Camera::Update()
 {
-/*	XMVECTOR posVec, upVec, focusVec;
+	XMVECTOR posVec, upVec, focusVec;
 	XMMATRIX viewMatrix, projMatrix;
 
 	posVec = XMLoadFloat3(&position);
@@ -81,8 +81,8 @@ void Camera::Update()
 
 	XMStoreFloat4x4(&viewMat, viewMatrix);
 	XMStoreFloat4x4(&projMat, projMatrix);
-*/
 
+/*
 	XMFLOAT3 u, pos, lookAt;
 	float yaw, pitch, roll;
 	XMMATRIX rotationMatrix;
@@ -120,7 +120,7 @@ void Camera::Update()
 
 	// Finally create the view matrix from the three updated vectors.
 	XMStoreFloat4x4(&viewMat, XMMatrixLookAtLH(XMLoadFloat3(&position), XMLoadFloat3(&lookAt), XMLoadFloat3(&up)));
-
+	*/
 	return;
 }
 
