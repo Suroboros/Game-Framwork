@@ -13,6 +13,7 @@
 #include <DirectXMath.h>
 #include <fstream>
 #include <tchar.h>
+#include "Mesh.h"
 
 using namespace std;
 using namespace DirectX;
@@ -32,6 +33,8 @@ class LightShader
 		XMFLOAT4 color;
 		XMFLOAT3 direction;
 		bool useTex;
+		XMFLOAT3 viewDir;
+		float padding;
 	};
 
 public:
@@ -39,24 +42,25 @@ public:
 	LightShader(const LightShader& lightShader);
 	~LightShader();
 
-	bool Initialize(ID3D11Device* device, HWND hwnd);
+	bool Initialize();
 	void Shutdown();
-	bool Render(ID3D11DeviceContext* deviceContext, const int indexCount, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, const XMFLOAT4 color, const XMFLOAT3 direction);
+	bool Render(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection);
 
 private:
-	ID3D11VertexShader* vertexShader;
-	ID3D11PixelShader* pixelShader;
-	ID3D11InputLayout* layout;
-	ID3D11SamplerState* samplerState;
-	ID3D11Buffer* matrixBuffer;
-	ID3D11Buffer* lightBuffer;
+	ID3D11VertexShader* m_vertexShader;
+	ID3D11PixelShader* m_pixelShader;
+	ID3D11InputLayout* m_layout;
+	ID3D11SamplerState* m_samplerState;
+	ID3D11Buffer* m_matrixBuffer;
+	ID3D11Buffer* m_lightBuffer;
+	ID3D11Buffer* m_materialBuffer;
 
-	bool InitializeShader(ID3D11Device* device, HWND hwnd, TCHAR* vsPath, TCHAR* psPath);
+	bool InitializeShader(TCHAR* vsPath, TCHAR* psPath);
 	void ShutdownShader();
-	void OutputShaderErrorMessage(ID3DBlob* errorMsg, HWND hwnd, TCHAR* shaderPath);
+	void OutputShaderErrorMessage(ID3DBlob* errorMsg, TCHAR* shaderPath);
 
-	bool SetShaderParameter(ID3D11DeviceContext* deviceContex, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction);
-	void RenderShader(ID3D11DeviceContext* deviceContext, const int indexCount);
+	bool SetShaderParameter(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection);
+	void RenderShader(const int indexCount);
 };
 
 #endif // !_LIGHT_SHADER_H_

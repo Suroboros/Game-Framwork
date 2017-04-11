@@ -21,21 +21,26 @@ public:
 	Texture(Texture& texture);
 	~Texture();
 
-	bool Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, TCHAR* srcPath);
+	bool Initialize(TCHAR* srcPath);
 	void ShutDown();
 
 	bool LoadImageFromFile(TCHAR* srcPath);
+
+	// Get the texture size
+	UINT GetWidth();
+	UINT GetHeight();
 
 	ID3D11ShaderResourceView* GetTexture();
 
 private:
 	// Image infor
-	unsigned char* imgBuffer;
-	UINT width, height;
-	UINT stride;
+	unsigned char* m_imgBuffer;
+	UINT m_width, m_height;
+	UINT m_stride;
+	DXGI_FORMAT m_ImageFormat;
 
-	ID3D11Texture2D* texture;
-	ID3D11ShaderResourceView* textureView;
+	ID3D11Texture2D* m_texture;
+	ID3D11ShaderResourceView* m_textureView;
 	//unsigned char* imageData;
 };
 

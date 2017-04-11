@@ -4,19 +4,21 @@
 /////////////////////////////////////
 
 #include "D3DClass.h"
+#include "WinMain.h"
 
 D3DClass::D3DClass()
 {
-	vsyncEnabled = false;
+	m_vsyncEnabled = false;
 
-	device = nullptr;
-	deviceContext = nullptr;
-	swapChain = nullptr;
-	renderTargetView = nullptr;
-	depthBuffer = nullptr;
+	m_device = nullptr;
+	m_deviceContext = nullptr;
+	m_swapChain = nullptr;
+	m_renderTargetView = nullptr;
+	m_depthBuffer = nullptr;
 	//depthStencilState = nullptr;
-	depthStencilView = nullptr;
-	rasterizerState = nullptr;
+	m_depthStencilView = nullptr;
+	m_rasterizerState = nullptr;
+	m_effect = nullptr;
 }
 
 D3DClass::D3DClass(const D3DClass &)
@@ -27,11 +29,19 @@ D3DClass::~D3DClass()
 {
 }
 
-bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullCreen, float screenDepth, float screenNear)
+D3DClass & D3DClass::operator=(const D3DClass &)
+{
+	return *this;
+}
+
+bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float screenNear)
 {
 	HRESULT hr;
+	bool result;
 
-	vsyncEnabled = vsync;
+	m_vsyncEnabled = vsync;
+	int screenWidth = WindowMain::GetInstance().GetScreenWidth();
+	int screenHeight = WindowMain::GetInstance().GetScreenHeight();
 
 	// Create a graphics interface factory
 	IDXGIFactory* factory = nullptr;
@@ -112,7 +122,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	swDesc.BufferDesc.Width = screenWidth;
 	swDesc.BufferDesc.Height = screenHeight;
 	swDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	if(vsyncEnabled)
+	if(m_vsyncEnabled)
 	{
 		swDesc.BufferDesc.RefreshRate.Numerator = numerator;
 		swDesc.BufferDesc.RefreshRate.Denominator = denominator;
@@ -125,7 +135,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	swDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	swDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	swDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swDesc.OutputWindow = hwnd;
+	swDesc.OutputWindow = WindowMain::GetInstance().GetHwnd();
 	swDesc.SampleDesc.Count = 1;
 	swDesc.SampleDesc.Quality = 0;
 	swDesc.Windowed = !fullCreen;
@@ -133,23 +143,23 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	swDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, featureLevels, featureLevelsCount,
-		D3D11_SDK_VERSION, &swDesc, &swapChain, &device, &featureLevelSupported, &deviceContext);
+		D3D11_SDK_VERSION, &swDesc, &m_swapChain, &m_device, &m_featureLevelSupported, &m_deviceContext);
 	if (FAILED(hr))
 		return false;
 	
 	// Get the back buffer pointer and set it as target view.
 	ID3D11Texture2D* backBufferPtr;
-	hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
+	hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
 	if (FAILED(hr))
 		return false;
-	hr = device->CreateRenderTargetView(backBufferPtr, NULL, &renderTargetView);
+	hr = m_device->CreateRenderTargetView(backBufferPtr, NULL, &m_renderTargetView);
 	// Release the back buffer because we no longer need it.
 	backBufferPtr->Release();
 	backBufferPtr = nullptr;
 	if (FAILED(hr))
 		return false;
 	// Set render target
-	deviceContext->OMSetRenderTargets(1, &renderTargetView, NULL);
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, NULL);
 	
 	// Create depth buffer
 	D3D11_TEXTURE2D_DESC depthBufferDesc;
@@ -165,7 +175,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthBufferDesc.CPUAccessFlags = 0;
 	depthBufferDesc.MiscFlags = 0;
-	hr = device->CreateTexture2D(&depthBufferDesc, NULL, &depthBuffer);
+	hr = m_device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthBuffer);
 	if (FAILED(hr))
 		return false;
 
@@ -175,12 +185,12 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	depthStencilViewDesc.Flags = 0;
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
-	hr = device->CreateDepthStencilView(depthBuffer, &depthStencilViewDesc, &depthStencilView);
+	hr = m_device->CreateDepthStencilView(m_depthBuffer, &depthStencilViewDesc, &m_depthStencilView);
 	if (FAILED(hr))
 		return false;
 
 	// Bind the render target view and depth stencil buffer to the output render pipeline.
-	deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
 	// Setup the raster descripthion which will determine how and what polygons will be drawn
 	D3D11_RASTERIZER_DESC rasterDesc;
@@ -195,11 +205,11 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	rasterDesc.ScissorEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 	// Create the rasterizer state
-	hr = device->CreateRasterizerState(&rasterDesc, &rasterizerState);
+	hr = m_device->CreateRasterizerState(&rasterDesc, &m_rasterizerState);
 	if(FAILED(hr))
 		return false;
 	// Set the rasterizer state
-	deviceContext->RSSetState(rasterizerState);
+	m_deviceContext->RSSetState(m_rasterizerState);
 
 	// Setup the viewport for rendering
 	D3D11_VIEWPORT viewPort[1];
@@ -210,44 +220,53 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	viewPort[0].MinDepth = 0.0f;
 	viewPort[0].MaxDepth = 1.0f;
 	// Create the viewport
-	deviceContext->RSSetViewports(_countof(viewPort), viewPort);
+	m_deviceContext->RSSetViewports(_countof(viewPort), viewPort);
 
 	// Setup the projection matrix
 	float fieldOfView = XM_PI / 4.0f;
 	float screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-	XMStoreFloat4x4(&projectionMatrix, XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth));
+	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth));
 
 	// Initialize the world matrix
-	XMStoreFloat4x4(&worldMatrix, XMMatrixIdentity());
+	XMStoreFloat4x4(&m_worldMatrix, XMMatrixIdentity());
 
 	// Create the orthographic projection matrix for 2D rendering
-	XMStoreFloat4x4(&orthoMatrix, XMMatrixOrthographicLH(static_cast<float>(screenWidth), static_cast<float>(screenHeight), screenNear, screenDepth));
+	XMStoreFloat4x4(&m_orthoMatrix, XMMatrixOrthographicLH(static_cast<float>(screenWidth), static_cast<float>(screenHeight), screenNear, screenDepth));
+	
+	// Create the effect object
+	m_effect = new Effect;
+
+	// Initialize the effect object
+	result = m_effect->Initialize();
+	if(!result)
+		return false;
+
 	return true;
 }
 
 void D3DClass::Shutdown()
 {
-	// Before shutting down set to windowed mode or when you release the swap chain it will throw an exception.
-	if(swapChain)
+	// Before shutting down set to windowed mode or when release the swap chain it will throw an exception.
+	if(m_swapChain)
 	{
-		swapChain->SetFullscreenState(false, NULL);
+		m_swapChain->SetFullscreenState(false, NULL);
 	}
 
-	if(deviceContext)
+	if(m_deviceContext)
 	{
-		deviceContext->ClearState();
+		m_deviceContext->ClearState();
 	}
 
-	if(rasterizerState)
+	if(m_rasterizerState)
 	{
-		rasterizerState->Release();
-		rasterizerState = nullptr;
+		m_rasterizerState->Release();
+		m_rasterizerState = nullptr;
 	}
 
-	if(depthStencilView)
+	if(m_depthStencilView)
 	{
-		depthStencilView->Release();
-		depthStencilView = nullptr;
+		m_depthStencilView->Release();
+		m_depthStencilView = nullptr;
 	}
 
 /*	if(depthStencilState)
@@ -256,37 +275,50 @@ void D3DClass::Shutdown()
 		depthStencilState = nullptr;
 	}
 */
-	if(depthBuffer)
+	if(m_depthBuffer)
 	{
-		depthBuffer->Release();
-		depthBuffer = nullptr;
+		m_depthBuffer->Release();
+		m_depthBuffer = nullptr;
 	}
 
-	if(renderTargetView)
+	if(m_renderTargetView)
 	{
-		renderTargetView->Release();
-		renderTargetView = nullptr;
+		m_renderTargetView->Release();
+		m_renderTargetView = nullptr;
 	}
 
-	if(deviceContext)
+	if(m_effect)
 	{
-		deviceContext->Release();
-		deviceContext = nullptr;
+		m_effect->Shutdown();
+		delete m_effect;
+		m_effect = nullptr;
 	}
 
-	if(device)
+	if(m_deviceContext)
 	{
-		device->Release();
-		device = nullptr;
+		m_deviceContext->Release();
+		m_deviceContext = nullptr;
 	}
 
-	if(swapChain)
+	if(m_device)
 	{
-		swapChain->Release();
-		swapChain = nullptr;
+		m_device->Release();
+		m_device = nullptr;
+	}
+
+	if(m_swapChain)
+	{
+		m_swapChain->Release();
+		m_swapChain = nullptr;
 	}
 
 	return;
+}
+
+D3DClass & D3DClass::GetInstance()
+{
+	static D3DClass instance;
+	return instance;
 }
 
 // The beginning of each frame.
@@ -296,10 +328,10 @@ void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 	float color[4] = { red,green,blue,alpha };
 
 	// Clear the back buffer
-	deviceContext->ClearRenderTargetView(renderTargetView, color);
+	m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
 
 	// Clear the depth buffer
-	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	return;
 }
@@ -308,15 +340,15 @@ void D3DClass::BeginScene(float red, float green, float blue, float alpha)
 void D3DClass::EndScene()
 {
 	// Present the back buffer to the screen since rendering is complete.
-	if(vsyncEnabled)
+	if(m_vsyncEnabled)
 	{
 		// Lock to screen refresh rate.
-		swapChain->Present(1, 0);
+		m_swapChain->Present(1, 0);
 	}
 	else
 	{
 		// Present as fast as possible.
-		swapChain->Present(0, 0);
+		m_swapChain->Present(0, 0);
 	}
 
 	return;
@@ -324,25 +356,25 @@ void D3DClass::EndScene()
 
 ID3D11Device * D3DClass::GetDevice()
 {
-	return device;
+	return m_device;
 }
 
 ID3D11DeviceContext * D3DClass::GetDeviceContext()
 {
-	return deviceContext;
+	return m_deviceContext;
 }
 
 void D3DClass::GetWorldMatrix(XMMATRIX & world)
 {
-	world = XMLoadFloat4x4(&worldMatrix);
+	world = XMLoadFloat4x4(&m_worldMatrix);
 }
 
 void D3DClass::GetProjectionMatrix(XMMATRIX & projection)
 {
-	projection = XMLoadFloat4x4(&projectionMatrix);
+	projection = XMLoadFloat4x4(&m_projectionMatrix);
 }
 
 void D3DClass::GetOrthoMatrix(XMMATRIX & ortho)
 {
-	ortho = XMLoadFloat4x4(&orthoMatrix);
+	ortho = XMLoadFloat4x4(&m_orthoMatrix);
 }

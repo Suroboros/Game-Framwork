@@ -20,7 +20,7 @@
 using namespace std;
 using namespace DirectX;
 
-// //The definition of vertex type that will be used with the vertex buffer in this ModelClass.
+// The definition of vertex type that will be used with the vertex buffer in this ModelClass.
 struct VertexDataType
 {
 	XMFLOAT3 pos;
@@ -28,6 +28,16 @@ struct VertexDataType
 	XMFLOAT3 nor;
 
 };
+
+// The definition of material type
+struct MaterialType
+{
+	XMFLOAT4 diffuse;
+	XMFLOAT4 ambient;
+	XMFLOAT3 specular;
+	float specularPower;
+};
+
 
 // Mesh class
 class Mesh
@@ -39,24 +49,26 @@ public:
 	~Mesh();
 
 	// Group name
-	string name;
+	string m_name;
 	// Material name
-	string usemtl;
+	string m_usemtl;
 	// Vertices data
-	vector<VertexDataType> data;
+	vector<VertexDataType> m_data;
 	// Index data
-	vector<unsigned int> indices;
+	vector<unsigned int> m_indices;
+	// Material
+	MaterialType m_meterial;
 
 	// Initialize the vertex and index buffers.
-	bool InitializeBuffers(ID3D11Device* device);
+	bool InitializeBuffers();
 	// Release the vertex buffer and index buffer.
 	void ShutdownBuffer();
 	// Setup the vertex buffer and index buffer.
-	void RenderBuffers(ID3D11DeviceContext* deviceContext);
+	void RenderBuffers();
 
 private:
-	ID3D11Buffer* vertexBuffer;
-	ID3D11Buffer* indexBuffer;
+	ID3D11Buffer* m_vertexBuffer;
+	ID3D11Buffer* m_indexBuffer;
 		
 };
 
@@ -96,31 +108,34 @@ public:
 	Model(Model& model);
 	~Model();
 
-	vector<Mesh*> model;
+	vector<Mesh*> m_model;
 
-	bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, TCHAR* meshPath, TCHAR* texPath = nullptr);
+	bool Initialize(TCHAR* meshPath, TCHAR* texPath = nullptr);
 	void Shutdown();
-	void Render(ID3D11DeviceContext* deviceContext);
+	void Render();
 
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
 
-	// Load obj format mesh file
-	bool LoadFromObj(TCHAR* filePath);
+	
 
 private:
 	// Obj data
-	OBJDataType objData;
+	OBJDataType m_objData;
 	// Material file path
-	string mtlPath;
-	Texture* texture;
+	string m_mtlPath;
+	Texture* m_texture;
 
 	// Divide the index from the f string
 	void DivideIndexString(XMINT3& index, string input);
+	// Load obj format mesh file
+	bool LoadFromObj(TCHAR* filePath);
+	// Load mtl file
+	bool LoadMtl();
 	// Write obj data to mesh
 	bool WriteMesh();
 
-	bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, TCHAR* texPath);
+	bool LoadTexture(TCHAR* texPath);
 	void ReleaseTexture();
 
 };

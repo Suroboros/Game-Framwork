@@ -29,8 +29,8 @@ public:
 	XMFLOAT3 GetDirection();
 
 private:
-	XMFLOAT4 color;
-	XMFLOAT3 direction;
+	XMFLOAT4 m_color;
+	XMFLOAT3 m_direction;
 
 };
 

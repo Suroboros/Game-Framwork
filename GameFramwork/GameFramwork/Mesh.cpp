@@ -3,11 +3,12 @@
 // The mesh of object.
 /////////////////////////////////////
 #include "Mesh.h"
+#include "D3DClass.h"
 
 Mesh::Mesh()
 {
-	vertexBuffer = nullptr;
-	indexBuffer = nullptr;
+	m_vertexBuffer = nullptr;
+	m_indexBuffer = nullptr;
 }
 
 Mesh::Mesh(const Mesh &)
@@ -18,7 +19,7 @@ Mesh::~Mesh()
 {
 }
 
-bool Mesh::InitializeBuffers(ID3D11Device * device)
+bool Mesh::InitializeBuffers()
 {
 	//VertexDataType* vertices;
 	//unsigned long* indices;
@@ -30,7 +31,7 @@ bool Mesh::InitializeBuffers(ID3D11Device * device)
 	// Setup the description of the vertex buffer.
 	D3D11_BUFFER_DESC vbDesc;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;
-	vbDesc.ByteWidth = sizeof(VertexDataType)*data.size();
+	vbDesc.ByteWidth = sizeof(VertexDataType)*m_data.size();
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.CPUAccessFlags = 0;
 	vbDesc.MiscFlags = 0;
@@ -38,19 +39,19 @@ bool Mesh::InitializeBuffers(ID3D11Device * device)
 
 	// Give the subresource structure a pointer to the vertex data.
 	D3D11_SUBRESOURCE_DATA vertexData;
-	vertexData.pSysMem = &(data[0]);
+	vertexData.pSysMem = &(m_data[0]);
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
 	// Create vertex buffer
-	hr = device->CreateBuffer(&vbDesc, &vertexData, &vertexBuffer);
+	hr = D3DClass::GetInstance().GetDevice()->CreateBuffer(&vbDesc, &vertexData, &m_vertexBuffer);
 	if(FAILED(hr))
 		return false;
 
 	// Setup the description of index buffer.
 	D3D11_BUFFER_DESC indexDesc;
 	indexDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexDesc.ByteWidth = sizeof(unsigned int)*indices.size();
+	indexDesc.ByteWidth = sizeof(unsigned int)*m_indices.size();
 	indexDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexDesc.CPUAccessFlags = 0;
 	indexDesc.MiscFlags = 0;
@@ -58,13 +59,12 @@ bool Mesh::InitializeBuffers(ID3D11Device * device)
 
 	// Give the subresource structure a pointer to the index data.
 	D3D11_SUBRESOURCE_DATA indexData;
-	indexData.pSysMem = &(indices[0]);
+	indexData.pSysMem = &(m_indices[0]);
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
 	// Create index buffer
-	hr = device->CreateBuffer(&indexDesc, &indexData, &indexBuffer);
-
+	hr = D3DClass::GetInstance().GetDevice()->CreateBuffer(&indexDesc, &indexData, &m_indexBuffer);
 	if(FAILED(hr))
 		return false;
 
@@ -75,24 +75,24 @@ void Mesh::ShutdownBuffer()
 {
 	// Release the index buffer
 	
-	if(indexBuffer)
+	if(m_indexBuffer)
 	{
-		indexBuffer->Release();
-		indexBuffer = nullptr;
+		m_indexBuffer->Release();
+		m_indexBuffer = nullptr;
 	}
 	
 
 	// Release the vertex buffer
-	if(vertexBuffer)
+	if(m_vertexBuffer)
 	{
-		vertexBuffer->Release();
-		vertexBuffer = nullptr;
+		m_vertexBuffer->Release();
+		m_vertexBuffer = nullptr;
 	}
 
 	return;
 }
 
-void Mesh::RenderBuffers(ID3D11DeviceContext * deviceContext)
+void Mesh::RenderBuffers()
 {
 	// Set vertex buffer stride and offset
 
@@ -100,16 +100,16 @@ void Mesh::RenderBuffers(ID3D11DeviceContext * deviceContext)
 	UINT offsets = 0;
 
 	// Set the vertex buffer to active 
-		deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &strides, &offsets);
+	D3DClass::GetInstance().GetDeviceContext()->IASetVertexBuffers(0, 1, &m_vertexBuffer, &strides, &offsets);
 	// Set the index buffer to active
-		deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	D3DClass::GetInstance().GetDeviceContext()->IASetIndexBuffer(m_indexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	// Set the type of primitive tha should be rendered from this vertex buffer
-		deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3DClass::GetInstance().GetDeviceContext()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 Model::Model()
 {
-	texture = nullptr;
+	m_texture = nullptr;
 }
 
 Model::Model(Model & model)
@@ -120,7 +120,7 @@ Model::~Model()
 {
 }
 
-bool Model::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContext, TCHAR* meshPath, TCHAR* texPath)
+bool Model::Initialize(TCHAR* meshPath, TCHAR* texPath)
 {
 	bool result;
 
@@ -132,15 +132,15 @@ bool Model::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContex
 	// Load texture if texture is setted
 	if(texPath)
 	{
-		result = LoadTexture(device, deviceContext, texPath);
+		result = LoadTexture(texPath);
 		if(!result)
 			return false;
 	}
 
 	// Initialize the vertex and index buffers.
-	for(auto mesh : model)
+	for(auto mesh : m_model)
 	{
-		result = mesh->InitializeBuffers(device);
+		result = mesh->InitializeBuffers();
 		if(!result)
 			return false;
 	}
@@ -154,7 +154,7 @@ void Model::Shutdown()
 	ReleaseTexture();
 
 	// Release meshes
-	for(auto mesh : model)
+	for(auto mesh : m_model)
 	{
 		mesh->ShutdownBuffer();
 		delete mesh;
@@ -164,26 +164,25 @@ void Model::Shutdown()
 	return;
 }
 
-void Model::Render(ID3D11DeviceContext * deviceContext)
+void Model::Render()
 {
-	for(auto mesh:model)
-		mesh->RenderBuffers(deviceContext);
-//	model[0]->RenderBuffers(deviceContext);
-	return;
+	for(auto mesh: m_model)
+		mesh->RenderBuffers();
+
 }
 
 int Model::GetIndexCount()
 {
 	int indexCnt = 0;
-	for(auto mesh : model)
-		indexCnt += mesh->indices.size();
+	for(auto mesh : m_model)
+		indexCnt += mesh->m_indices.size();
 	return indexCnt;
 }
 
 ID3D11ShaderResourceView * Model::GetTexture()
 {
-	if(texture)
-		return texture->GetTexture();
+	if(m_texture)
+		return m_texture->GetTexture();
 	else
 		return nullptr;
 }
@@ -221,7 +220,7 @@ bool Model::LoadFromObj(TCHAR* filePath)
 
 		// Read mtl file path
 		if(input.compare("mtllib") == 0)
-			fin >> objData.mtllib;
+			fin >> m_objData.mtllib;
 
 		// Read geometric vertex
 		if(input.compare("v") == 0)
@@ -229,7 +228,7 @@ bool Model::LoadFromObj(TCHAR* filePath)
 			fin >> v.x >> v.y >> v.z;
 			// Invert the Z vertex to change to left hand system
 			v.z = v.z*-1.0f;
-			objData.v.push_back(v);
+			m_objData.v.push_back(v);
 
 		}
 
@@ -239,7 +238,7 @@ bool Model::LoadFromObj(TCHAR* filePath)
 			fin >> vt.x >> vt.y;
 			// Invert the V texture coordinates to left hand system.
 			vt.y = 1.0f - vt.y;
-			objData.vt.push_back(vt);
+			m_objData.vt.push_back(vt);
 		}
 
 		// Read vertex normal
@@ -248,7 +247,7 @@ bool Model::LoadFromObj(TCHAR* filePath)
 			fin >> vn.x >> vn.y >> vn.z;
 			// Invert the Z normal to left hand system.
 			vn.z = vn.z*-1.0f;
-			objData.vn.push_back(vn);
+			m_objData.vn.push_back(vn);
 		}
 
 		// Read group information
@@ -285,7 +284,7 @@ bool Model::LoadFromObj(TCHAR* filePath)
 				input = (char)fin.peek();
 			}
 
-			objData.groups.push_back(gInfo);
+			m_objData.groups.push_back(gInfo);
 			gInfo.name = "";
 			gInfo.usemtl = "";
 			gInfo.faces.clear();
@@ -297,6 +296,12 @@ bool Model::LoadFromObj(TCHAR* filePath)
 	// Write to mesh
 	if(!WriteMesh())
 		return false;
+	return true;
+}
+
+bool Model::LoadMtl()
+{
+
 	return true;
 }
 
@@ -326,27 +331,27 @@ void Model::DivideIndexString(XMINT3 & index, string input)
 
 void Model::ReleaseTexture()
 {
-	if(texture)
+	if(m_texture)
 	{
-		texture->ShutDown();
-		delete texture;
-		texture = 0;
+		m_texture->ShutDown();
+		delete m_texture;
+		m_texture = nullptr;
 	}
 }
 
 bool Model::WriteMesh()
 {
 	// Write mtl file path
-	mtlPath = objData.mtllib;
+	m_mtlPath = m_objData.mtllib;
 
 	// Write vertex information
-	for(auto group : objData.groups)
+	for(auto group : m_objData.groups)
 	{
 		int vIndex = 0, vtIndex = 0, vnIndex = 0;
 		Mesh* mesh = new Mesh;
 		// Write group name and material name
-		mesh->name = group.name;
-		mesh->usemtl = group.usemtl;
+		mesh->m_name = group.name;
+		mesh->m_usemtl = group.usemtl;
 		unsigned int idxCnt = 0;
 		// Write face information
 		for(auto f : group.faces)
@@ -368,52 +373,52 @@ bool Model::WriteMesh()
 
 				VertexDataType vd;
 				// Write vertex
-				vd.pos = objData.v[vIndex];
+				vd.pos = m_objData.v[vIndex];
 				if(vtIndex < 0) // If no texture coordinate data
 					vd.tex = { 0.0,0.0 };
 				else
-					vd.tex = objData.vt[vtIndex];
-				vd.nor = objData.vn[vnIndex];
-				mesh->data.push_back(vd);
+					vd.tex = m_objData.vt[vtIndex];
+				vd.nor = m_objData.vn[vnIndex];
+				mesh->m_data.push_back(vd);
 				// Write index
 				
-				mesh->indices.push_back(idxCnt);
+				mesh->m_indices.push_back(idxCnt);
 				++idxCnt;
 			}
 		}
 
-		model.push_back(mesh);
+		m_model.push_back(mesh);
 	}
-	if(model.empty())
+	if(m_model.empty())
 		return false;
 
 	// Clear objData
-	objData.v.clear();
-	objData.vn.clear();
-	objData.vt.clear();
-	objData.mtllib = "";
-	for(auto group : objData.groups)
+	m_objData.v.clear();
+	m_objData.vn.clear();
+	m_objData.vt.clear();
+	m_objData.mtllib = "";
+	for(auto group : m_objData.groups)
 	{
 		for(auto face : group.faces)
 			face.vertices.clear();
 		group.faces.clear();
 	}
-	objData.groups.clear();
+	m_objData.groups.clear();
 
 	return true;
 }
 
-bool Model::LoadTexture(ID3D11Device * device, ID3D11DeviceContext * deviceContext, TCHAR * texPath)
+bool Model::LoadTexture(TCHAR * texPath)
 {
 	bool result;
 
 	// Create the texture object
-	texture = new Texture;
-	if(!texture)
+	m_texture = new Texture;
+	if(!m_texture)
 		return false;
 
-	result = texture->Initialize(device, deviceContext, texPath);
+	result = m_texture->Initialize(texPath);
 	if(!result)
 		return false;
-	return false;
+	return true;
 }

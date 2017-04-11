@@ -1,5 +1,5 @@
 #include "Texture.h"
-
+#include "D3DClass.h"
 
 #pragma warning(push)
 #pragma warning(disable : 4005)
@@ -52,12 +52,12 @@ WICFormatTranslate transList[] =
 
 Texture::Texture()
 {
-	texture = nullptr;
-	textureView = nullptr;
-	imgBuffer = nullptr;
-	width = 0;
-	height = 0;
-	stride = 0;
+	m_texture = nullptr;
+	m_textureView = nullptr;
+	m_imgBuffer = nullptr;
+	m_width = 0;
+	m_height = 0;
+	m_stride = 0;
 }
 
 Texture::Texture(Texture & texture)
@@ -68,20 +68,22 @@ Texture::~Texture()
 {
 }
 
-bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContext, TCHAR* srcPath)
+bool Texture::Initialize(TCHAR* srcPath)
 {
 	HRESULT hr;
 
 	// Load image
 	bool result = LoadImageFromFile(srcPath);
+	if(!result)
+		return false;
 
 	// Setup the description of the texture
 	D3D11_TEXTURE2D_DESC texDesc;
-	texDesc.Height = height;
-	texDesc.Width = width;
+	texDesc.Height = m_height;
+	texDesc.Width = m_width;
 	texDesc.MipLevels = 0;
 	texDesc.ArraySize = 1;
-	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.Format = m_ImageFormat;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
 	texDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -90,12 +92,12 @@ bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceCont
 	texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
 	// Create the empty texture
-	hr = device->CreateTexture2D(&texDesc, NULL, &texture);
+	hr = D3DClass::GetInstance().GetDevice()->CreateTexture2D(&texDesc, NULL, &m_texture);
 	if(FAILED(hr))
 		return false;
 
 	// Copy the image data into the texture
-	deviceContext->UpdateSubresource(texture, 0, NULL, imgBuffer, stride, 0);
+	D3DClass::GetInstance().GetDeviceContext()->UpdateSubresource(m_texture, 0, NULL, m_imgBuffer, m_stride, 0);
 
 	// Setup the shader resource view description
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
@@ -105,16 +107,16 @@ bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceCont
 	srvDesc.Texture2D.MipLevels = -1;
 
 	// Create the shader resource view for the texture
-	hr = device->CreateShaderResourceView(texture, &srvDesc, &textureView);
+	hr = D3DClass::GetInstance().GetDevice()->CreateShaderResourceView(m_texture, &srvDesc, &m_textureView);
 	if(FAILED(hr))
 		return false;
 
 	// Generate mipmaps for this texture
-	deviceContext->GenerateMips(textureView);
+	D3DClass::GetInstance().GetDeviceContext()->GenerateMips(m_textureView);
 
 	// Release image buffer
-	delete[] imgBuffer;
-	imgBuffer = nullptr;
+	delete[] m_imgBuffer;
+	m_imgBuffer = nullptr;
 
 	return true;
 }
@@ -122,17 +124,17 @@ bool Texture::Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceCont
 void Texture::ShutDown()
 {
 	// Release the texture view resource
-	if(textureView)
+	if(m_textureView)
 	{
-		textureView->Release();
-		textureView = nullptr;
+		m_textureView->Release();
+		m_textureView = nullptr;
 	}
 
 	// Release the texture;
-	if(texture)
+	if(m_texture)
 	{
-		texture->Release();
-		texture = nullptr;
+		m_texture->Release();
+		m_texture = nullptr;
 	}
 }
 
@@ -160,12 +162,6 @@ bool Texture::LoadImageFromFile(TCHAR * srcPath)
 	if(FAILED(hr))
 		return false;
 
-	// Get the width and height of image
-	hr = imgFrame->GetSize(&width, &height);
-	if(FAILED(hr))
-		return false;
-	assert(width > 0 && height > 0);
-
 	// Get the pixel format of the image.
 	WICPixelFormatGUID pixFormat;
 	hr = imgFrame->GetPixelFormat(&pixFormat);
@@ -179,58 +175,122 @@ bool Texture::LoadImageFromFile(TCHAR * srcPath)
 		if(memcmp(&transList[i].pix, &pixFormat, sizeof(pixFormat)) == 0)
 			dxgiFormat = transList[i].dxgi;
 	}
+	m_ImageFormat = dxgiFormat;
 
-	IWICFormatConverter* fc = nullptr;
-	// Change to 32 bits data
-	if(dxgiFormat != DXGI_FORMAT_R8G8B8A8_UNORM)
+	// Get bpp of the image
+	IWICComponentInfo* cinfo = nullptr;
+	hr = imgFactory->CreateComponentInfo(pixFormat, &cinfo);
+	if(FAILED(hr))
+		return false;
+
+	WICComponentType type;
+	hr = cinfo->GetComponentType(&type);
+	if(FAILED(hr))
+		return false;
+
+	if(type != WICPixelFormat)
+		return false;
+
+	IWICPixelFormatInfo* pfinfo;
+	if(FAILED(cinfo->QueryInterface(__uuidof(IWICPixelFormatInfo), reinterpret_cast<void**>(&pfinfo))))
+		return false;
+
+	UINT bpp;
+	if(FAILED(pfinfo->GetBitsPerPixel(&bpp)))
+		return false;
+	
+	// Change to 32 bits data if the bpp is not 32bit format 
+	if(bpp != 32)
 	{
+		IWICFormatConverter* fc = nullptr;
+
 		hr = imgFactory->CreateFormatConverter(&fc);
 		if(FAILED(hr))
 			return false;
 
-		hr = fc->Initialize(imgFrame, GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom);
+		hr = fc->Initialize(imgFrame, GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeErrorDiffusion, 0, 0, WICBitmapPaletteTypeCustom);
 		if(FAILED(hr))
 			return false;
+
+		// Get the pixel format.
+		WICPixelFormatGUID pixFormat;
+		hr = fc->GetPixelFormat(&pixFormat);
+		if(FAILED(hr))
+			return false;
+
+		// Convert pixel format to dxgi format
+		DXGI_FORMAT dxgiFormat = DXGI_FORMAT_UNKNOWN;
+		for(int i = 0; i < _countof(transList); ++i)
+		{
+			if(memcmp(&transList[i].pix, &pixFormat, sizeof(pixFormat)) == 0)
+				dxgiFormat = transList[i].dxgi;
+		}
+		m_ImageFormat = dxgiFormat;
+
+		// Get size of the image after convert
+		hr = fc->GetSize(&m_width, &m_height);
+		if(FAILED(hr))
+			return false;
+		assert(m_width > 0 && m_height > 0);
+
+		// Copy image data
+		//unsigned char* imgBuffer = new unsigned char[width*height * 4];
+		m_imgBuffer = new unsigned char[m_width*m_height * 4];
+		m_stride = (m_width * 32 + 7) / 8;
+		UINT size = m_stride*m_height;
+		hr = fc->CopyPixels(0, m_stride, size, m_imgBuffer);
+		if(FAILED(hr))
+		{
+			// Release the image buffer
+			delete[] m_imgBuffer;
+			m_imgBuffer = nullptr;
+			return false;
+		}
+			
+		// Release convert pointer
+		if(fc)
+		{
+			fc->Release();
+			fc = nullptr;
+		}
+
+	}
+	else // If bpp is 32bit format
+	{
+		// Get the width and height of image
+		hr = imgFrame->GetSize(&m_width, &m_height);
+		if(FAILED(hr))
+			return false;
+		assert(m_width > 0 && m_height > 0);
+
+		// Copy image data
+		//unsigned char* imgBuffer = new unsigned char[width*height * 4];
+		m_imgBuffer = new unsigned char[m_width*m_height * bpp];
+		m_stride = (m_width * bpp + 7) / 8;
+		UINT size = m_stride*m_height;
+		hr = imgFrame->CopyPixels(0, m_stride, size, m_imgBuffer);
+		if(FAILED(hr))
+		{
+			// Release the image buffer
+			delete[] m_imgBuffer;
+			m_imgBuffer = nullptr;
+			return false;
+		}
+
 	}
 
-	// Get bpp of the image
-	IWICComponentInfo* cinfo = nullptr;
-	if(FAILED(imgFactory->CreateComponentInfo(pixFormat, &cinfo)))
-		return false;
-
-	WICComponentType type;
-	if(FAILED(cinfo->GetComponentType(&type)))
-		return 0;
-
-	if(type != WICPixelFormat)
-		return 0;
-
-	IWICPixelFormatInfo* pfinfo;
-	if(FAILED(cinfo->QueryInterface(__uuidof(IWICPixelFormatInfo), reinterpret_cast<void**>(&pfinfo))))
-		return 0;
-
-	UINT bpp;
-	if(FAILED(pfinfo->GetBitsPerPixel(&bpp)))
-		return 0;
-
-	// Copy image data
-	//unsigned char* imgBuffer = new unsigned char[width*height * 4];
-	imgBuffer = new unsigned char[width*height * bpp];
-	stride = (width * bpp + 7) / 8;
-	UINT size = stride*height;
-	hr = imgFrame->CopyPixels(0, stride, size, imgBuffer);
-	if(FAILED(hr))
-		return false;
-
 	// Release resource
-	pfinfo->Release();
-	pfinfo = nullptr;
+	if(pfinfo)
+	{
+		pfinfo->Release();
+		pfinfo = nullptr;
+	}
 
-	cinfo->Release();
-	cinfo = nullptr;
-
-	fc->Release();
-	fc = nullptr;
+	if(cinfo)
+	{
+		cinfo->Release();
+		cinfo = nullptr;
+	}
 
 	imgFrame->Release();
 	imgFrame = nullptr;
@@ -245,7 +305,17 @@ bool Texture::LoadImageFromFile(TCHAR * srcPath)
 	return true;
 }
 
+UINT Texture::GetWidth()
+{
+	return m_width;
+}
+
+UINT Texture::GetHeight()
+{
+	return m_height;
+}
+
 ID3D11ShaderResourceView * Texture::GetTexture()
 {
-	return textureView;
+	return m_textureView;
 }

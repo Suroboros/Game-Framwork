@@ -1,6 +1,6 @@
 #pragma once
 /////////////////////////////////////
-// D3DClass.cpp
+// D3DClass.h
 // DirectX control system.
 /////////////////////////////////////
 
@@ -17,18 +17,18 @@
 // Include
 #include <d3d11.h>
 #include <DirectXMath.h>
+#include "Effect.h"
 using namespace DirectX;
 
 // DirectX class
 class D3DClass
 {
 public:
-	D3DClass();
-	D3DClass(const D3DClass&);
-	~D3DClass();
-
-	bool Initialize(int screenWidth, int screenHeight, bool vsync, HWND hwnd, bool fullCreen, float screenDepth, float screenNear);
+	bool Initialize(bool vsync, bool fullCreen, float screenDepth, float screenNear);
 	void Shutdown();
+
+	// Get the instance of D3DClass(singleton) 
+	static D3DClass& GetInstance();
 
 	void BeginScene(float red, float green, float blue, float alpha);
 	void EndScene();
@@ -40,21 +40,30 @@ public:
 	void GetProjectionMatrix(XMMATRIX& projection);
 	void GetOrthoMatrix(XMMATRIX& ortho);
 
+	Effect* m_effect;
+	
 private:
-	bool vsyncEnabled;
+	D3DClass();
+	D3DClass(const D3DClass&);
+	~D3DClass();
+	D3DClass& operator=(const D3DClass&);
 
-	ID3D11Device* device;
-	ID3D11DeviceContext* deviceContext;
-	IDXGISwapChain* swapChain;
-	ID3D11RenderTargetView* renderTargetView;
-	D3D_FEATURE_LEVEL featureLevelSupported;
-	ID3D11Texture2D* depthBuffer;
+	bool m_vsyncEnabled;
+
+	ID3D11Device* m_device;
+	ID3D11DeviceContext* m_deviceContext;
+	IDXGISwapChain* m_swapChain;
+	ID3D11RenderTargetView* m_renderTargetView;
+	D3D_FEATURE_LEVEL m_featureLevelSupported;
+	ID3D11Texture2D* m_depthBuffer;
 	//ID3D11DepthStencilState* depthStencilState;
-	ID3D11DepthStencilView* depthStencilView;
-	ID3D11RasterizerState* rasterizerState;
-	XMFLOAT4X4 worldMatrix;
-	XMFLOAT4X4 projectionMatrix;
-	XMFLOAT4X4 orthoMatrix;
-};
+	ID3D11DepthStencilView* m_depthStencilView;
+	ID3D11RasterizerState* m_rasterizerState;
+	XMFLOAT4X4 m_worldMatrix;
+	XMFLOAT4X4 m_projectionMatrix;
+	XMFLOAT4X4 m_orthoMatrix;
 
+	
+};
+static int acv = 0;
 #endif 

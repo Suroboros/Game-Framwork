@@ -14,6 +14,8 @@
 #include "Mesh.h"
 #include "Light.h"
 #include "LightShader.h"
+#include "Image.h"
+#include "TextureShader.h"
 
 #pragma once
 /////////////
@@ -32,7 +34,7 @@ public:
 	GraphicSystem(const GraphicSystem&);
 	~GraphicSystem();
 
-	bool Initialize(HWND hwnd, int screenWidth = 0, int screenHight = 0);
+	bool Initialize();
 	void Shutdown();
 	bool Frame();
 
@@ -40,13 +42,15 @@ private:
 	bool Render();
 
 private:
-	D3DClass* D3DObject;
+	//D3DClass* D3DObject;
+	TextureShader* texShader;
 	LightShader* lightShader;
+	
 
 public:
 	Camera::spCamera camera[4]; //camera
 	Model* model;
-
+	Image* image;
 	Light* light;
 };
 

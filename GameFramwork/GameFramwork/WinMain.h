@@ -29,6 +29,7 @@ class WindowMain
 	int nCmdShow;
 	HWND hwnd;
 	LPTSTR className;
+	int screenWidth, screenHeight;
 
 	// System object.
 	InputSystem* inputSystem;
@@ -36,10 +37,9 @@ class WindowMain
 
 	
 public:
-	WindowMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow);
+	
 
-	bool Initialize();
-	bool InitializeWindows(int&, int&);
+	bool Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow);
 	void Run();
 	void Shutdown();
 	void ShutdownWindows();
@@ -49,6 +49,23 @@ public:
 
 	// Key processing.
 	LRESULT CALLBACK KeyHandler(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	// Get screen size
+	int GetScreenWidth();
+	int GetScreenHeight();
+	// Get window`s handle
+	HWND GetHwnd();
+
+	// Get the instance of WindowMain(singleton) 
+	static WindowMain& GetInstance();
+
+private:
+	WindowMain();
+	WindowMain(const WindowMain&);
+	~WindowMain();
+	WindowMain& operator=(const WindowMain&);
+
+	bool InitializeWindows(int&, int&);
 };
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -56,7 +73,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /////////////
 // GLOBALS 
 /////////////
-static WindowMain* ApplicationHandle = nullptr;
+//static WindowMain* ApplicationHandle = nullptr;
 
 #endif
 

@@ -13,34 +13,57 @@
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow)
 {
 	bool result;
-	WindowMain window(hInstance, hPrevInstance, pCmdLine, nCmdShow);
-	result = window.Initialize();
+	
+	result = WindowMain::GetInstance().Initialize(hInstance, hPrevInstance, pCmdLine, nCmdShow);
 	if(result)
-		window.Run();
+		WindowMain::GetInstance().Run();
 
-	window.Shutdown();
+	WindowMain::GetInstance().Shutdown();
 
 	
 
 	return 0;
 }
 
-WindowMain::WindowMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow)
+WindowMain::WindowMain()
 {
-	this->hInstance = hInstance;
-	this->hPrevInstance = hPrevInstance;
-	this->pCmdLine = pCmdLine;
-	this->nCmdShow = nCmdShow;
+	this->hInstance = 0;
+	this->hPrevInstance = 0;
+	this->pCmdLine = nullptr;
+	this->nCmdShow = 0;
+
 	hwnd = NULL;
+
+	screenWidth = 0;
+	screenHeight = 0;
 
 	inputSystem = nullptr;
 	graphicSystem = nullptr;
 }
 
-bool WindowMain::Initialize()
+WindowMain::WindowMain(const WindowMain&)
+{
+
+}
+
+WindowMain::~WindowMain()
+{
+
+}
+
+WindowMain& WindowMain::operator=(const WindowMain&)
+{
+	return *this;
+}
+
+bool WindowMain::Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow)
 {
 	bool result;
-	int screenWidth = 0, screenHeight = 0;
+
+	this->hInstance = hInstance;
+	this->hPrevInstance = hPrevInstance;
+	this->pCmdLine = pCmdLine;
+	this->nCmdShow = nCmdShow;
 	
 	// Initialize windows.
 	result = InitializeWindows(screenWidth, screenHeight);
@@ -61,7 +84,7 @@ bool WindowMain::Initialize()
 	{
 		return false;
 	}
-	graphicSystem->Initialize(hwnd, screenWidth, screenHeight);
+	graphicSystem->Initialize();
 
 	return true;
 }
@@ -74,7 +97,7 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 	//bool result;
 
 	// Get an external pointer to this object.	
-	ApplicationHandle = this;
+	//ApplicationHandle = this;
 
 	// Register the window class.
 	className = TEXT("Window Class");
@@ -226,7 +249,7 @@ void WindowMain::ShutdownWindows()
 	hInstance = nullptr;
 
 	// Release the pointer to this class.
-	ApplicationHandle = nullptr;
+	//ApplicationHandle = nullptr;
 
 	return;
 }
@@ -278,6 +301,27 @@ LRESULT WindowMain::KeyHandler(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	}
 }
 
+int WindowMain::GetScreenWidth()
+{
+	return screenWidth;
+}
+
+int WindowMain::GetScreenHeight()
+{
+	return screenHeight;
+}
+
+HWND WindowMain::GetHwnd()
+{
+	return hwnd;
+}
+
+WindowMain & WindowMain::GetInstance()
+{
+	static WindowMain instance;
+	return instance;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -306,7 +350,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 	default:
-		return ApplicationHandle->KeyHandler(hwnd, uMsg, wParam, lParam);
+		return WindowMain::GetInstance().KeyHandler(hwnd, uMsg, wParam, lParam);
 	}
 }
 
