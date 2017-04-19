@@ -109,6 +109,7 @@ public:
 	~Model();
 
 	vector<Mesh*> m_model;
+	float m_width, m_height, m_depth;
 
 	bool Initialize(TCHAR* meshPath, TCHAR* texPath = nullptr);
 	void Shutdown();

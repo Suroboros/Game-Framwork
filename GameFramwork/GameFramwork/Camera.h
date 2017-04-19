@@ -30,6 +30,9 @@ public:
 	XMFLOAT3 GetRotation();
 	XMFLOAT3 GetFocus();
 
+	// Get the direction of view
+	XMFLOAT3 GetViewDirection();
+
 	// Use the position and rotation of the camera to setup and update camera.
 	void Update();
 	// Get the updated view matrix after the update function has been called.

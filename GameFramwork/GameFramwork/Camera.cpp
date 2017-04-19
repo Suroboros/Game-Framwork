@@ -64,6 +64,15 @@ XMFLOAT3 Camera::GetFocus()
 	return focus;
 }
 
+XMFLOAT3 Camera::GetViewDirection()
+{
+	XMFLOAT3 viewDir;
+	XMStoreFloat3(&viewDir, XMLoadFloat3(&position) - XMLoadFloat3(&focus));
+	return viewDir;
+}
+
+
+
 void Camera::Update()
 {
 	XMVECTOR posVec, upVec, focusVec;

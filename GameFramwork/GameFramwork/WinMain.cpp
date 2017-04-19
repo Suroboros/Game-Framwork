@@ -74,6 +74,7 @@ bool WindowMain::Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR 
 	inputSystem = new InputSystem;
 	if (!inputSystem)
 	{
+		MessageBox(hwnd, _T("Could not initialize the input object."), _T("Error"), MB_OK);
 		return false;
 	}
 	inputSystem->Initialize();
@@ -201,6 +202,10 @@ void WindowMain::Run()
 			if (!result)
 				break;
 		}
+
+		// Check if the user pressed escape to quit
+		if(inputSystem->IsEscapePressed())
+			runFlag = false;
 	}
 	return;
 }
@@ -219,6 +224,7 @@ void WindowMain::Shutdown()
 	// Release input system.
 	if (inputSystem)
 	{
+		inputSystem->Shutdown();
 		delete inputSystem;
 		inputSystem = nullptr;
 	}
@@ -256,14 +262,16 @@ void WindowMain::ShutdownWindows()
 
 bool WindowMain::Frame()
 {
-	// Check if the user pressed escape and wants to exit the application.
-	if (inputSystem->IsKeyDown(VK_ESCAPE))
+	bool result;
+
+	// Do the frame function of input system
+	result = inputSystem->Frame();
+	if(!result)
 	{
 		return false;
 	}
 
 	// Do the frame function of graphic system
-	bool result;
 	result = graphicSystem->Frame();
 	if (!result)
 	{
@@ -281,16 +289,16 @@ LRESULT WindowMain::KeyHandler(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	case WM_KEYDOWN:
 	{
 		// If a key is pressed send it to the input object so it can record that state.
-		inputSystem->KeyDown((unsigned int)wParam);
-		return 0;
+		//inputSystem->KeyDown((unsigned int)wParam);
+		//return 0;
 	}
 
 	// Check if a key has been released on the keyboard.
 	case WM_KEYUP:
 	{
 		// If a key is released then send it to the input object so it can unset the state for that key.
-		inputSystem->KeyUp((unsigned int)wParam);
-		return 0;
+		//nputSystem->KeyUp((unsigned int)wParam);
+		//return 0;
 	}
 
 	// Any other messages send to the default message handler as our application won't make use of them.
@@ -320,6 +328,11 @@ WindowMain & WindowMain::GetInstance()
 {
 	static WindowMain instance;
 	return instance;
+}
+
+HINSTANCE WindowMain::GetHINSTSANCE()
+{
+	return hInstance;
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)

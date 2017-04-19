@@ -58,6 +58,8 @@ public:
 
 	// Get the instance of WindowMain(singleton) 
 	static WindowMain& GetInstance();
+	// Get hInstance
+	HINSTANCE GetHINSTSANCE();
 
 private:
 	WindowMain();

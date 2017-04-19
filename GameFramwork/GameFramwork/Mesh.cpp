@@ -192,11 +192,8 @@ bool Model::LoadFromObj(TCHAR* filePath)
 	ifstream fin;
 	string input, input2;
 
-	int gCount = 0;
-	int vCount = 0;
-	int vtCount = 0;
-	int vnCount = 0;
-	int fCount = 0;
+	float maxX = 0.0f, minX = 0.0f, maxY = 0.0f, minY = 0.0f, maxZ = 0.0f, minZ = 0.0f;
+	int cnt = 0;
 	XMFLOAT3 v, vn;
 	XMFLOAT2 vt;
 	XMINT3 vertex;
@@ -228,6 +225,29 @@ bool Model::LoadFromObj(TCHAR* filePath)
 			fin >> v.x >> v.y >> v.z;
 			// Invert the Z vertex to change to left hand system
 			v.z = v.z*-1.0f;
+			// Store the maxin and minin of the mesh
+			if(cnt == 0)
+			{
+				maxX = minX = v.x;
+				maxY = minY = v.y;
+				maxZ = minZ = v.z;
+				cnt++;
+			}
+			else
+			{
+				if(v.x > maxX)
+					maxX = v.x;
+				else if(v.x < minX)
+					minX = v.x;
+				if(v.y > maxY)
+					maxY = v.y;
+				else if(v.y < minY)
+					minY = v.y;
+				if(v.z > maxZ)
+					maxZ = v.z;
+				else if(v.z < minZ)
+					minZ = v.z;
+			}
 			m_objData.v.push_back(v);
 
 		}
@@ -292,6 +312,12 @@ bool Model::LoadFromObj(TCHAR* filePath)
 	}
 	// Close file
 	fin.close();
+
+	// Calculate the size of the model
+	m_width = maxX - minX;
+	m_height = maxY - minY;
+	m_depth = maxZ - minZ;
+
 
 	// Write to mesh
 	if(!WriteMesh())
