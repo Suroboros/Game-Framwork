@@ -61,7 +61,7 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 
 	// Get the number of modes that fit the DXGI_FORMAT_R8G8B8A8_UNORM display format for the adapter output(monitor).
 	UINT numModes = 0;
-	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
+	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, NULL);
 	if(FAILED(hr))
 		return false;
 
@@ -69,7 +69,7 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 	DXGI_MODE_DESC* displayModeList = new DXGI_MODE_DESC[numModes];
 	if(!displayModeList)
 		return false;
-	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
+	hr = adapterOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_ENUM_MODES_INTERLACED, &numModes, displayModeList);
 	if(FAILED(hr))
 		return false;
 
@@ -121,7 +121,7 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 	swDesc.BufferCount = 1;
 	swDesc.BufferDesc.Width = screenWidth;
 	swDesc.BufferDesc.Height = screenHeight;
-	swDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	if(m_vsyncEnabled)
 	{
 		swDesc.BufferDesc.RefreshRate.Numerator = numerator;
@@ -142,11 +142,11 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 	swDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	swDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, 0, featureLevels, featureLevelsCount,
+	hr = D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, D3D11_CREATE_DEVICE_BGRA_SUPPORT, featureLevels, featureLevelsCount,
 		D3D11_SDK_VERSION, &swDesc, &m_swapChain, &m_device, &m_featureLevelSupported, &m_deviceContext);
 	if (FAILED(hr))
 		return false;
-	
+
 	// Get the back buffer pointer and set it as target view.
 	ID3D11Texture2D* backBufferPtr;
 	hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
@@ -362,6 +362,11 @@ ID3D11Device * D3DClass::GetDevice()
 ID3D11DeviceContext * D3DClass::GetDeviceContext()
 {
 	return m_deviceContext;
+}
+
+IDXGISwapChain * D3DClass::GetSwapChain()
+{
+	return m_swapChain;
 }
 
 void D3DClass::GetWorldMatrix(XMMATRIX & world)

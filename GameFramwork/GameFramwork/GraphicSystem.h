@@ -16,6 +16,9 @@
 #include "LightShader.h"
 #include "Image.h"
 #include "TextureShader.h"
+#include "D2DClass.h"
+#include "DWClass.h"
+#include "Font.h"
 
 #pragma once
 /////////////
@@ -52,6 +55,7 @@ public:
 	Model* model;
 	Image* image;
 	Light* light;
+	Font* font;
 };
 
 #endif 

@@ -22,7 +22,7 @@ InputSystem::~InputSystem()
 
 InputSystem & InputSystem::operator=(const InputSystem &)
 {
-	//return *this;
+	return *this;
 }
 
 bool InputSystem::Initialize()

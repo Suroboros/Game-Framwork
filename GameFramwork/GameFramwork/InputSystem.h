@@ -8,7 +8,9 @@
 #define _INPUTSYSTEM_H_
 
 // Version of Direct input
+#ifndef DIRECTINPUT_VERSION
 #define DIRECTINPUT_VERSION 0x0800
+#endif // !DIRECTINPUT_VERSION
 
 // Linking
 //#pragma comment(lib,"dinput8.lib")
@@ -20,6 +22,8 @@
 #include "KeyboardDevice.h"
 #include "MouseDevice.h"
 #include <map>
+
+using namespace std;
 
 // Input class
 class InputSystem

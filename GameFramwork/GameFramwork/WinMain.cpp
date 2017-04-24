@@ -71,13 +71,21 @@ bool WindowMain::Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR 
 		return false;
 
 	// Initialize input system.
-	inputSystem = new InputSystem;
-	if (!inputSystem)
+	result = InputSystem::GetInstance().Initialize();
+	//inputSystem = new InputSystem;
+	if (!result)
 	{
 		MessageBox(hwnd, _T("Could not initialize the input object."), _T("Error"), MB_OK);
 		return false;
 	}
-	inputSystem->Initialize();
+	//inputSystem->Initialize();
+	// Create keyboard device.
+	result = InputSystem::GetInstance().CreateKeyborad("sys");
+	if(!result)
+	{
+		MessageBox(hwnd, _T("Could not create keyboard device."), _T("Error"), MB_OK);
+		return false;
+	}
 
 	// Initialize graphic system.
 	graphicSystem = new GraphicSystem;
@@ -204,7 +212,7 @@ void WindowMain::Run()
 		}
 
 		// Check if the user pressed escape to quit
-		if(inputSystem->IsEscapePressed())
+		if(InputSystem::GetInstance().IsEscapePressed("sys"))
 			runFlag = false;
 	}
 	return;
@@ -222,12 +230,13 @@ void WindowMain::Shutdown()
 	}
 
 	// Release input system.
-	if (inputSystem)
-	{
-		inputSystem->Shutdown();
-		delete inputSystem;
-		inputSystem = nullptr;
-	}
+	//if (inputSystem)
+	//{
+	//	inputSystem->Shutdown();
+	//	delete inputSystem;
+	//	inputSystem = nullptr;
+	//}
+	InputSystem::GetInstance().Shutdown();
 
 	ShutdownWindows();
 
@@ -265,7 +274,7 @@ bool WindowMain::Frame()
 	bool result;
 
 	// Do the frame function of input system
-	result = inputSystem->Frame();
+	result = InputSystem::GetInstance().Frame();
 	if(!result)
 	{
 		return false;

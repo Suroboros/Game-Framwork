@@ -15,6 +15,7 @@ GraphicSystem::GraphicSystem()
 	lightShader = nullptr;
 	image = nullptr;
 	texShader = nullptr;
+	font = nullptr;
 }
 
 GraphicSystem::GraphicSystem(const GraphicSystem &)
@@ -29,11 +30,29 @@ bool GraphicSystem::Initialize()
 {
 	bool result;
 
-
+	// Create D3D object
 	result = D3DClass::GetInstance().Initialize(VSYNC_ENABLED, FULLSCREEN, SCREEN_DEPTH, SCREEN_NEAR);
 	if(!result)
 	{
 		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct3D!"), _T("Error"), MB_OK);
+		DestroyWindow(WindowMain::GetInstance().GetHwnd());
+		return false;
+	}
+
+	// Create D2D object
+	result = D2DClass::GetInstance().Initialize();
+	if(!result)
+	{
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct2D!"), _T("Error"), MB_OK);
+		DestroyWindow(WindowMain::GetInstance().GetHwnd());
+		return false;
+	}
+
+	// Create direct write object
+	result = DWClass::GetInstance().Initialize();
+	if(!result)
+	{
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct write!"), _T("Error"), MB_OK);
 		DestroyWindow(WindowMain::GetInstance().GetHwnd());
 		return false;
 	}
@@ -97,11 +116,30 @@ bool GraphicSystem::Initialize()
 		return false;
 	}
 
+	// Create font
+	font = new Font;
+	if(!font)
+		return false;
+	result = font->Initialize();
+	if(!result)
+	{
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Could not initialize the Font object"), _T("Error"), MB_OK);
+		return false;
+	}
+
 	return true;
 }
 
 void GraphicSystem::Shutdown()
 {
+	// Realease the font object
+	if(font)
+	{
+		font->Shutdown();
+		delete font;
+		font = nullptr;
+	}
+
 	// Release the image object
 	if(image)
 	{
@@ -141,8 +179,12 @@ void GraphicSystem::Shutdown()
 		model = nullptr;
 	}
 
+	// Release the Direct2D object
+	D2DClass::GetInstance().Shutdown();
+
 	// Release the Direct3D object
 	D3DClass::GetInstance().Shutdown();
+
 
 	return;
 }
@@ -167,7 +209,10 @@ bool GraphicSystem::Render()
 	bool result;
 
 	//Clear the buffers to begin the scene
-	D3DClass::GetInstance().BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
+	D3DClass::GetInstance().BeginScene(0.7f, 0.7f, 0.7f, 1.0f);
+
+
+
 
 	camera[0]->Update();
 
@@ -205,7 +250,16 @@ bool GraphicSystem::Render()
 	// Turn on depth buffer
 	D3DClass::GetInstance().m_effect->DepthBufferOn();
 
+
+	// Start 2D rendering
+	D2DClass::GetInstance().BeginDraw();
+	font->CreateText(_T("Hello world!"), _T("Arial"), 50.0, 1.0, 1.0, 1.0, 0.5);
+
+	// End 2D rendering
+	D2DClass::GetInstance().EndDraw();
+
 	//Present the rendered scene to the screen
 	D3DClass::GetInstance().EndScene();
+
 	return true;
 }

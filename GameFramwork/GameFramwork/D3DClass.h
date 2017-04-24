@@ -15,7 +15,7 @@
 #pragma comment(lib, "d3dcompiler.lib")
 
 // Include
-#include <d3d11.h>
+#include <d3d11_2.h>
 #include <DirectXMath.h>
 #include "Effect.h"
 using namespace DirectX;
@@ -35,6 +35,7 @@ public:
 
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
+	IDXGISwapChain* GetSwapChain();
 
 	void GetWorldMatrix(XMMATRIX& world);
 	void GetProjectionMatrix(XMMATRIX& projection);
