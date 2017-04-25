@@ -22,7 +22,12 @@ public:
 	bool Update();
 
 	// Current state of mouse
-	DIMOUSESTATE m_mouseState;
+	DIMOUSESTATE m_curState;
+	// Previous state of mouse
+	DIMOUSESTATE m_preState;
+
+	// Postion of mouse
+	int m_posX, m_posY;
 };
 
 #endif // !_MOUSE_DEVICE_H_

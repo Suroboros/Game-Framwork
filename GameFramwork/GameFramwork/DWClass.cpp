@@ -1,5 +1,22 @@
 #include "DWClass.h"
 
+DWClass::DWClass()
+{
+}
+
+DWClass::DWClass(const DWClass&)
+{
+}
+
+DWClass::~DWClass()
+{
+}
+
+DWClass & DWClass::operator=(const DWClass &)
+{
+	return *this;
+}
+
 bool DWClass::Initialize()
 {
 	HRESULT hr;
@@ -41,3 +58,5 @@ IDWriteTextFormat * DWClass::CreateTextFormat(TCHAR * font, FLOAT size)
 	m_factory->CreateTextFormat(font, nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, size, _T(""), &m_textFormat);
 	return m_textFormat;
 }
+
+

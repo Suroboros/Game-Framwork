@@ -95,12 +95,13 @@ bool InputSystem::CreateMouse(string name)
 	return true;
 }
 
-bool InputSystem::IsEscapePressed(string name)
+bool InputSystem::IsEscapeDown(string name)
 {
 	auto input = m_inputs.find(name);
 
 	if(input!=m_inputs.end()&&input->second->m_deviceType==InputDevice::DeviceType::KEYBOARD){
-		if(dynamic_cast<KeyboardDevice*>(input->second)->m_keyboardState[DIK_ESCAPE] & 0x80)
+		if(((dynamic_cast<KeyboardDevice*>(input->second)->m_curState[DIK_ESCAPE] & 0x80)!=0)&&
+			((dynamic_cast<KeyboardDevice*>(input->second)->m_preState[DIK_ESCAPE] & 0x80)==0))
 			return true;
 	}
 	return false;
@@ -111,7 +112,8 @@ bool InputSystem::IsKeyDown(string name, int key)
 	auto input = m_inputs.find(name);
 
 	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::KEYBOARD) {
-		if(dynamic_cast<KeyboardDevice*>(input->second)->m_keyboardState[key] & 0x80)
+		if(((dynamic_cast<KeyboardDevice*>(input->second)->m_curState[key] & 0x80) != 0) &&
+			((dynamic_cast<KeyboardDevice*>(input->second)->m_preState[key] & 0x80) == 0))
 			return true;
 	}
 	return false;
@@ -123,8 +125,8 @@ void InputSystem::GetMouseLocation(string name, int & x, int & y)
 
 	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::MOUSE) {
 		auto input = m_inputs.find(name);
-		x = dynamic_cast<MouseDevice*>(input->second)->m_mouseState.lX;
-		y = dynamic_cast<MouseDevice*>(input->second)->m_mouseState.lY;
+		x = dynamic_cast<MouseDevice*>(input->second)->m_posX;
+		y = dynamic_cast<MouseDevice*>(input->second)->m_posY;
 	}
 }
 
@@ -134,7 +136,8 @@ bool InputSystem::IsLeftButtonDown(string name)
 
 	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::MOUSE) {
 		auto input = m_inputs.find(name);
-		if(dynamic_cast<MouseDevice*>(input->second)->m_mouseState.rgbButtons[0] & 0x80)
+		if(((dynamic_cast<MouseDevice*>(input->second)->m_curState.rgbButtons[0] & 0x80)!=0)&&
+			((dynamic_cast<MouseDevice*>(input->second)->m_preState.rgbButtons[0] & 0x80) != 0))
 			return true;
 	}
 	return false;
@@ -146,7 +149,8 @@ bool InputSystem::IsRightButtonDown(string name)
 
 	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::MOUSE) {
 		auto input = m_inputs.find(name);
-		if(dynamic_cast<MouseDevice*>(input->second)->m_mouseState.rgbButtons[1] & 0x80)
+		if(((dynamic_cast<MouseDevice*>(input->second)->m_curState.rgbButtons[1] & 0x80) != 0) &&
+			((dynamic_cast<MouseDevice*>(input->second)->m_preState.rgbButtons[1] & 0x80) != 0))
 			return true;
 	}
 	return false;

@@ -27,6 +27,16 @@ public:
 		JOYSTIC
 	};
 
+	// State of key and mouse button
+	enum State
+	{
+		ON,
+		OFF,
+		DOWN,
+		PRESS,
+		UP
+	};
+
 	InputDevice();
 	InputDevice(const InputDevice&);
 	~InputDevice();
@@ -39,6 +49,10 @@ public:
 
 	DeviceType m_deviceType;
 
+	// Current state of key or mouse button
+	State m_curState;
+	// Previous state of key or mouse button
+	State m_preState;
 
 };
 

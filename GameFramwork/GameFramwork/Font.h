@@ -14,6 +14,7 @@
 // Include
 #include<dwrite.h>
 #include<tchar.h>
+#include "GEUtility.h"
 
 // Font class
 class Font
@@ -22,10 +23,12 @@ public :
 	bool Initialize();
 	void Shutdown();
 
-	void CreateText(TCHAR* text, TCHAR* font, FLOAT size, float r, float g, float b, float a);
+	static Font& GetInstance();
 
-	// Get the instance of D3DClass(singleton) 
-	//static D2DClass& GetInstance();
+	void CreateText(TCHAR* text, TCHAR* font, FLOAT size, Color color, Rect box);
+
+	
+	
 private:
 	
 };

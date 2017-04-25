@@ -9,7 +9,10 @@
 
 // Include
 #include <DirectXMath.h>
+#include <tchar.h>
+
 using namespace DirectX;
+using namespace std;
 
 float ToRadian(const float);
 float ToDegree(const float);
@@ -29,6 +32,15 @@ struct Rect
 	float left;
 	float bottom;
 	float right;
+};
+
+// Color struct
+struct Color
+{
+	float r;
+	float g;
+	float b;
+	float a;
 };
 
 #endif // !_GEUTILITY_H_

@@ -29,6 +29,11 @@ public:
 	// Get the instance of D3DClass(singleton) 
 	//static D2DClass& GetInstance();
 private:
+	DWClass();
+	DWClass(const DWClass&);
+	~DWClass();
+	DWClass& operator=(const DWClass&);
+
 	IDWriteFactory* m_factory;
 
 	IDWriteTextFormat* m_textFormat;

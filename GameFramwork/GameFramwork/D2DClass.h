@@ -33,6 +33,7 @@ public:
 	ID2D1DeviceContext* GetDeviceContext();
 
 	ID2D1SolidColorBrush* CreateBrush(float r, float g, float b, float a);
+	void DrawCircle(float x, float y, float r);
 
 private:
 	D2DClass();
@@ -51,6 +52,9 @@ private:
 
 	ID2D1SolidColorBrush* m_solidColorBrush;
 	ID2D1Bitmap1* m_bitmap;
+
+	ID2D1EllipseGeometry *m_pEllipseGeometry;
+
 
 	Font* font;
 	

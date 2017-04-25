@@ -10,15 +10,9 @@
 // Inludes
 #include <Windows.h>
 #include "D3DClass.h"
-#include "Camera.h"
-#include "Mesh.h"
-#include "Light.h"
-#include "LightShader.h"
-#include "Image.h"
-#include "TextureShader.h"
-#include "D2DClass.h"
 #include "DWClass.h"
-#include "Font.h"
+#include "D2DClass.h"
+#include "GameEngine.h"
 
 #pragma once
 /////////////
@@ -46,15 +40,11 @@ private:
 
 private:
 	//D3DClass* D3DObject;
-	TextureShader* texShader;
-	LightShader* lightShader;
+	
 	
 
 public:
-	Camera::spCamera camera[4]; //camera
-	Model* model;
-	Image* image;
-	Light* light;
+
 	Font* font;
 };
 

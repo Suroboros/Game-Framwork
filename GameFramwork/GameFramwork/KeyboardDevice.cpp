@@ -4,6 +4,8 @@
 
 KeyboardDevice::KeyboardDevice()
 {
+	std::memset(m_curState, 0, sizeof(m_curState));
+	std::memset(m_preState, 0, sizeof(m_preState));
 }
 
 KeyboardDevice::KeyboardDevice(const KeyboardDevice &)
@@ -47,8 +49,11 @@ bool KeyboardDevice::Update()
 {
 	HRESULT hr;
 
+	// Store previous state
+	std::memcpy(m_preState, m_curState, sizeof(m_curState));
+
 	// Read keyboard device
-	hr = m_inputDevice->GetDeviceState(sizeof(m_keyboardState), (LPVOID)&m_keyboardState);
+	hr = m_inputDevice->GetDeviceState(sizeof(m_curState), (LPVOID)&m_curState);
 	if(FAILED(hr))
 	{
 		// If the keyboard lost focus or was not acquired, try to get control back

@@ -22,7 +22,9 @@ public:
 	bool Update();
 
 	// Current state of keyboard
-	unsigned char m_keyboardState[256];
+	unsigned char m_curState[256];
+	// Previous state of keyboard
+	unsigned char m_preState[256];
 };
 
 #endif // !_KEYBOARD_DEVICE_H_

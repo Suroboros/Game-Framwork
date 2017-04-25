@@ -86,6 +86,13 @@ bool WindowMain::Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR 
 		MessageBox(hwnd, _T("Could not create keyboard device."), _T("Error"), MB_OK);
 		return false;
 	}
+	// Create Mouse device.
+	result = InputSystem::GetInstance().CreateMouse("sysMouse");
+	if(!result)
+	{
+		MessageBox(hwnd, _T("Could not create mouse device."), _T("Error"), MB_OK);
+		return false;
+	}
 
 	// Initialize graphic system.
 	graphicSystem = new GraphicSystem;
@@ -156,7 +163,7 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 	hwnd = CreateWindowEx(
 		0,                              // Optional window styles.
 		className,                     // Window class
-		L"Windows",                     // Window text
+		_T("Windows"),                     // Window text
 		WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,            // Window style
 
 										// Size and position
@@ -179,7 +186,7 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 	SetFocus(hwnd);
 
 	// Hide the mouse cursor.
-	ShowCursor(false);
+	ShowCursor(true);
 
 	return true;
 }
@@ -212,8 +219,9 @@ void WindowMain::Run()
 		}
 
 		// Check if the user pressed escape to quit
-		if(InputSystem::GetInstance().IsEscapePressed("sys"))
+		if(InputSystem::GetInstance().IsEscapeDown("sys"))
 			runFlag = false;
+
 	}
 	return;
 }

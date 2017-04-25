@@ -4,6 +4,8 @@
 
 MouseDevice::MouseDevice()
 {
+	ZeroMemory(&m_curState, sizeof(m_curState));
+	ZeroMemory(&m_preState, sizeof(m_preState));
 }
 
 MouseDevice::MouseDevice(const MouseDevice &)
@@ -48,8 +50,11 @@ bool MouseDevice::Update()
 {
 	HRESULT hr;
 
+	// Store previous state
+	std::memcpy(&m_preState, &m_curState, sizeof(m_curState));
+
 	// Read mouse device
-	hr = m_inputDevice->GetDeviceState(sizeof(m_mouseState), (LPVOID)&m_mouseState);
+	hr = m_inputDevice->GetDeviceState(sizeof(m_curState), (LPVOID)&m_curState);
 	if(FAILED(hr))
 	{
 		// If the mouse lost focus or was not acquired, try to get control back
@@ -60,5 +65,18 @@ bool MouseDevice::Update()
 		else
 			return false;
 	}
+
+	// Update the position of mouse
+	m_posX += m_curState.lX;
+	m_posY += m_curState.lY;
+
+	// Ensure the mouse location doesn`t exceed the screen width or height
+	if(m_posX < 0)m_posX = 0;
+	if(m_posY < 0)m_posY = 0;
+	if(m_posX > WindowMain::GetInstance().GetScreenWidth())
+		m_posX = WindowMain::GetInstance().GetScreenWidth();
+	if(m_posY > WindowMain::GetInstance().GetScreenHeight())
+		m_posY = WindowMain::GetInstance().GetScreenHeight();
+
 	return true;
 }

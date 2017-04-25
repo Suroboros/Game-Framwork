@@ -10,11 +10,6 @@
 GraphicSystem::GraphicSystem()
 {
 	//D3DObject = nullptr;
-	model = nullptr;
-	light = nullptr;
-	lightShader = nullptr;
-	image = nullptr;
-	texShader = nullptr;
 	font = nullptr;
 }
 
@@ -34,7 +29,7 @@ bool GraphicSystem::Initialize()
 	result = D3DClass::GetInstance().Initialize(VSYNC_ENABLED, FULLSCREEN, SCREEN_DEPTH, SCREEN_NEAR);
 	if(!result)
 	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct3D!"), _T("Error"), MB_OK);
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize Direct3D!"), _T("Error"), MB_OK);
 		DestroyWindow(WindowMain::GetInstance().GetHwnd());
 		return false;
 	}
@@ -43,7 +38,7 @@ bool GraphicSystem::Initialize()
 	result = D2DClass::GetInstance().Initialize();
 	if(!result)
 	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct2D!"), _T("Error"), MB_OK);
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize Direct2D!"), _T("Error"), MB_OK);
 		DestroyWindow(WindowMain::GetInstance().GetHwnd());
 		return false;
 	}
@@ -52,70 +47,20 @@ bool GraphicSystem::Initialize()
 	result = DWClass::GetInstance().Initialize();
 	if(!result)
 	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize the Direct write!"), _T("Error"), MB_OK);
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize Direct write!"), _T("Error"), MB_OK);
 		DestroyWindow(WindowMain::GetInstance().GetHwnd());
 		return false;
 	}
 
-	// Create default camera.
-	float a = ToRadian(30.0f);
-	camera[0] = Camera::Create(XMFLOAT3(5.0f, 0.0f, -10.0f), XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f), 
-		ToRadian(120.0f), static_cast<float>(WindowMain::GetInstance().GetScreenWidth()) / static_cast<float>(WindowMain::GetInstance().GetScreenHeight()), 1.0f, 300.0f);
-	camera[3] = camera[2] = camera[1] = camera[0];
-
-	// Create and initialize the mesh
-	model = new Model;
-//	result = model->Initialize(D3DObject->GetDevice(), D3DObject->GetDeviceContext(), _T("./kuma.obj"));
-	result = model->Initialize(_T("./kuma.obj"));
+	// Create Game engine obejct
+	result = GameEngine::GetInstance().Initialize();
 	if(!result)
 	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Could not initialize the mesh object."), _T("Error"), MB_OK);
+		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Can't initialize Game Egine!"), _T("Error"), MB_OK);
+		DestroyWindow(WindowMain::GetInstance().GetHwnd());
 		return false;
 	}
-
-	// Create and initialize the light and light shader
-	lightShader = new LightShader;
-	if(!lightShader)
-		return false;
-
-	result = lightShader->Initialize();
-	if(!result)
-	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Could not initialize the light shader object."), _T("Error"), MB_OK);
-		return false;
-	}
-
-	light = new Light;
-	if(!light)
-		return false;
-
-	light->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-	light->SetDirection(0.0f, 0.0f, 1.0f);
-
-
-	// Create and Initialize the texture shader
-	texShader = new TextureShader;
-	if(!texShader)
-		return false;
-
-	result = texShader->Initialize();
-	if(!result)
-	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Could not initialize the texture shader object"), _T("Error"), MB_OK);
-		return false;
-	}
-
-	// Create and Initialize the image
-	image = new Image();
-	if(!image)
-		return false;
-	result = image->Initialize(_T("./tex.bmp"));
-	if(!result)
-	{
-		MessageBox(WindowMain::GetInstance().GetHwnd(), _T("Could not initialize the image object"), _T("Error"), MB_OK);
-		return false;
-	}
-
+	
 	// Create font
 	font = new Font;
 	if(!font)
@@ -140,44 +85,8 @@ void GraphicSystem::Shutdown()
 		font = nullptr;
 	}
 
-	// Release the image object
-	if(image)
-	{
-		image->ShutDown();
-		delete image;
-		image = nullptr;
-	}
-
-	// Release the texutre shader
-	if(texShader)
-	{
-		texShader->Shutdown();
-		delete texShader;
-		texShader = nullptr;
-	}
-
-	// Release the light object
-	if(light)
-	{
-		delete light;
-		light = nullptr;
-	}
-
-	// Release the light shader object
-	if(lightShader)
-	{
-		lightShader->Shutdown();
-		delete lightShader;
-		lightShader = nullptr;
-	}
-
-	// Release the mesh object
-	if(model)
-	{
-		model->Shutdown();
-		delete model;
-		model = nullptr;
-	}
+	// Release the Game Engine object
+	GameEngine::GetInstance().Shutdown();
 
 	// Release the Direct2D object
 	D2DClass::GetInstance().Shutdown();
@@ -193,6 +102,8 @@ bool GraphicSystem::Frame()
 {
 	bool result;
 
+	GameEngine::GetInstance().Update();
+
 	//Render the graphics scene
 	result = Render();
 	if(!result)
@@ -205,15 +116,15 @@ bool GraphicSystem::Frame()
 
 bool GraphicSystem::Render()
 {
-	XMMATRIX world, view, projection;
-	bool result;
+//	XMMATRIX world, view, projection;
+//	bool result;
 
 	//Clear the buffers to begin the scene
 	D3DClass::GetInstance().BeginScene(0.7f, 0.7f, 0.7f, 1.0f);
 
+	GameEngine::GetInstance().Render3D();
 
-
-
+/*
 	camera[0]->Update();
 
 	// Get the world, view, and projection matrices
@@ -250,14 +161,28 @@ bool GraphicSystem::Render()
 	// Turn on depth buffer
 	D3DClass::GetInstance().m_effect->DepthBufferOn();
 
-
+*/
 	// Start 2D rendering
 	D2DClass::GetInstance().BeginDraw();
-	font->CreateText(_T("Hello world!"), _T("Arial"), 50.0, 1.0, 1.0, 1.0, 0.5);
-
+	GameEngine::GetInstance().Render2D();
+/*	int x, y;
+	InputSystem::GetInstance().GetMouseLocation("sysMouse", x, y);
+	char text[256];
+	char pos[16];
+	strcpy_s(text, "Mouse Position:\nX:");
+	_itoa_s(x, pos, 10);
+	strcat_s(text, pos);
+	strcat_s(text, "\nY:");
+	_itoa_s(y, pos, 10);
+	strcat_s(text, pos);
+	TCHAR temp[256];
+	USES_CONVERSION;
+	_tcscpy_s(temp, A2T(text));
+	font->CreateText(temp, _T("Arial"), 50.0, 1.0, 1.0, 1.0, 0.5);
+*/
 	// End 2D rendering
 	D2DClass::GetInstance().EndDraw();
-
+	
 	//Present the rendered scene to the screen
 	D3DClass::GetInstance().EndScene();
 

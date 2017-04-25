@@ -49,7 +49,7 @@ public:
 	bool CreateMouse(string name);
 
 	// Keybord
-	bool IsEscapePressed(string name);
+	bool IsEscapeDown(string name);
 	bool IsKeyDown(string name,int key);
 	
 	// Mouse

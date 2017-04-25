@@ -174,3 +174,9 @@ ID2D1SolidColorBrush* D2DClass::CreateBrush(float r, float g, float b, float a)
 	m_deviceContext->CreateSolidColorBrush(D2D1::ColorF(r, g, b, a), &m_solidColorBrush);
 	return m_solidColorBrush;
 }
+
+void D2DClass::DrawCircle(float x, float y, float r)
+{
+	m_deviceContext->DrawLine(D2D1::Point2F(x - 10.0f,y), D2D1::Point2F( x + 10.0f,y), CreateBrush(1.0, 0.0, 0.0, 0.0), 10);
+
+}

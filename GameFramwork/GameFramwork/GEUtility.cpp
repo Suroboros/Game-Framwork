@@ -3,6 +3,7 @@
 // Utility tools
 /////////////////////////////////////
 #include "GEUtility.h"
+#include <atlstr.h>
 
 float ToRadian(const float degree)
 {
@@ -13,3 +14,4 @@ float ToDegree(const float radian)
 {
 	return radian*180.0f / XM_PI;
 }
+
