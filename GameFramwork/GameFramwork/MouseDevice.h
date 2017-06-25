@@ -27,7 +27,7 @@ public:
 	DIMOUSESTATE m_preState;
 
 	// Postion of mouse
-	int m_posX, m_posY;
+	POINT m_pos;
 };
 
 #endif // !_MOUSE_DEVICE_H_

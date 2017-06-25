@@ -1,7 +1,7 @@
 #pragma once
 /////////////////////////////////////
 // Image.h
-// For presenting 2D image
+// Render image in 3D world.
 /////////////////////////////////////
 
 #ifndef _IMAGE_H_

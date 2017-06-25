@@ -1,5 +1,6 @@
 #include "Texture.h"
 #include "D3DClass.h"
+#include <fstream>
 
 #pragma warning(push)
 #pragma warning(disable : 4005)

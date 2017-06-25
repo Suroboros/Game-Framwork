@@ -119,14 +119,40 @@ bool InputSystem::IsKeyDown(string name, int key)
 	return false;
 }
 
+bool InputSystem::IsKeyPressed(string name, int key)
+{
+	auto input = m_inputs.find(name);
+
+	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::KEYBOARD) {
+		if(((dynamic_cast<KeyboardDevice*>(input->second)->m_curState[key] & 0x80) != 0) &&
+			((dynamic_cast<KeyboardDevice*>(input->second)->m_preState[key] & 0x80) != 0))
+			return true;
+	}
+
+	return false;
+}
+
+bool InputSystem::IsKeyUp(string name, int key)
+{
+	auto input = m_inputs.find(name);
+
+	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::KEYBOARD) {
+		if(((dynamic_cast<KeyboardDevice*>(input->second)->m_curState[key] & 0x80) == 0) &&
+			((dynamic_cast<KeyboardDevice*>(input->second)->m_preState[key] & 0x80) != 0))
+			return true;
+	}
+
+	return false;
+}
+
 void InputSystem::GetMouseLocation(string name, int & x, int & y)
 {
 	auto input = m_inputs.find(name);
 
 	if(input != m_inputs.end() && input->second->m_deviceType == InputDevice::DeviceType::MOUSE) {
 		auto input = m_inputs.find(name);
-		x = dynamic_cast<MouseDevice*>(input->second)->m_posX;
-		y = dynamic_cast<MouseDevice*>(input->second)->m_posY;
+		x = dynamic_cast<MouseDevice*>(input->second)->m_pos.x;
+		y = dynamic_cast<MouseDevice*>(input->second)->m_pos.y;
 	}
 }
 

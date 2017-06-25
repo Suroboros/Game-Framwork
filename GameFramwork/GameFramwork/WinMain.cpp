@@ -3,12 +3,8 @@
 // Main windows
 /////////////////////////////////////
 
-
 // Inludes
 #include "WinMain.h"
-
-
-
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow)
 {
@@ -72,13 +68,11 @@ bool WindowMain::Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR 
 
 	// Initialize input system.
 	result = InputSystem::GetInstance().Initialize();
-	//inputSystem = new InputSystem;
 	if (!result)
 	{
 		MessageBox(hwnd, _T("Could not initialize the input object."), _T("Error"), MB_OK);
 		return false;
 	}
-	//inputSystem->Initialize();
 	// Create keyboard device.
 	result = InputSystem::GetInstance().CreateKeyborad("sys");
 	if(!result)
@@ -110,13 +104,9 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 	int posX, posY;
 	// Full screen setting.
 	DEVMODE dmScreenSettings;
-	//bool result;
-
-	// Get an external pointer to this object.	
-	//ApplicationHandle = this;
 
 	// Register the window class.
-	className = TEXT("Window Class");
+	className = TEXT("Game Framwork");
 
 	WNDCLASS wc;
 	ZeroMemory(&wc, sizeof(wc));
@@ -164,7 +154,7 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 		0,                              // Optional window styles.
 		className,                     // Window class
 		_T("Windows"),                     // Window text
-		WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,            // Window style
+		WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX,            // Window style
 
 										// Size and position
 		posX, posY, screenWidth, screenHeight,
@@ -185,7 +175,7 @@ bool WindowMain::InitializeWindows(int& screenWidth, int& screenHeight)
 	SetForegroundWindow(hwnd);
 	SetFocus(hwnd);
 
-	// Hide the mouse cursor.
+	// Show the mouse cursor.
 	ShowCursor(true);
 
 	return true;
@@ -198,7 +188,7 @@ void WindowMain::Run()
 	ZeroMemory(&msg, sizeof(MSG));
 
 	// Loop
-	bool runFlag = true;
+	runFlag = true;
 	while (runFlag)
 	{
 		// Get the windows messages
@@ -221,7 +211,11 @@ void WindowMain::Run()
 		// Check if the user pressed escape to quit
 		if(InputSystem::GetInstance().IsEscapeDown("sys"))
 			runFlag = false;
-
+		if(InputSystem::GetInstance().IsKeyDown("sys", DIK_F1))
+		{
+			FULLSCREEN = !FULLSCREEN;
+			D3DClass::GetInstance().GetSwapChain()->SetFullscreenState(!FULLSCREEN, nullptr);
+		}
 	}
 	return;
 }
@@ -237,13 +231,6 @@ void WindowMain::Shutdown()
 		graphicSystem = nullptr;
 	}
 
-	// Release input system.
-	//if (inputSystem)
-	//{
-	//	inputSystem->Shutdown();
-	//	delete inputSystem;
-	//	inputSystem = nullptr;
-	//}
 	InputSystem::GetInstance().Shutdown();
 
 	ShutdownWindows();
@@ -271,9 +258,6 @@ void WindowMain::ShutdownWindows()
 	UnregisterClass(className, hInstance);
 	hInstance = nullptr;
 
-	// Release the pointer to this class.
-	//ApplicationHandle = nullptr;
-
 	return;
 }
 
@@ -300,29 +284,32 @@ bool WindowMain::Frame()
 
 LRESULT WindowMain::KeyHandler(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (uMsg)
+	switch(uMsg)
 	{
 		// Check if a key has been pressed on the keyboard.
-	case WM_KEYDOWN:
-	{
-		// If a key is pressed send it to the input object so it can record that state.
-		//inputSystem->KeyDown((unsigned int)wParam);
-		//return 0;
-	}
+		case WM_KEYDOWN:
+		{
+			switch(wParam)
+			{
+			case VK_ESCAPE:
+				PostMessage(hwnd, WM_QUIT, 0, 0);
+				break;
+			default:
+				break;
+			}
+		}
 
-	// Check if a key has been released on the keyboard.
-	case WM_KEYUP:
-	{
-		// If a key is released then send it to the input object so it can unset the state for that key.
-		//nputSystem->KeyUp((unsigned int)wParam);
-		//return 0;
-	}
+		// Check if a key has been released on the keyboard.
+		case WM_KEYUP:
+		{
 
-	// Any other messages send to the default message handler as our application won't make use of them.
-	default:
-	{
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
+		}
+
+		// Any other messages send to the default message handler as our application won't make use of them.
+		default:
+		{
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		}
 	}
 }
 
@@ -360,12 +347,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
-
+		break;
 		// When Window is being closed.
 	case WM_CLOSE:
 		PostQuitMessage(0);
 		return 0;
-
+		break;
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
@@ -375,12 +362,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		EndPaint(hwnd, &ps);
 		return 0;
+		break;
 	}
-
-
+	case WM_SIZE:
+	{
+	}
 
 	default:
 		return WindowMain::GetInstance().KeyHandler(hwnd, uMsg, wParam, lParam);
+		break;
 	}
 }
 

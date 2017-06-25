@@ -14,19 +14,37 @@
 // Camera class
 class Camera
 {
+	struct ViewFrustum
+	{
+		// The boundaries of the view frustum.
+		XMFLOAT4 plants[6];
+	};
 public:
 	Camera();
-	Camera(const XMFLOAT3& pos, const XMFLOAT3& focus, const XMFLOAT3& up, float angle, float aspRadio, float nearZ, float farZ);
 	Camera(const Camera&);
 	~Camera();
 
-	// Setup the position, target and rotation of the camera.
+	bool Initialize(const XMFLOAT3& pos, const XMFLOAT3& focus, const XMFLOAT3& up, float angle, float aspRadio, float nearZ, float farZ);
+	void Shutdown();
+
+	// Setup the position, target, rotation and up of the camera.
 	void SetPosition(float x, float y, float z);
 	void SetRotation(float x, float y, float z);
 	void SetFocus(float x, float y, float z);
+	void SetUp(float x, float y, float z);
+	// Set angel of view
+	void SetAOV(float angleOfView);
+
+	// Check that whether the object is in the view frustum or not.
+	// Check point.
+	bool CheckFrustumP(Point pos);
+	// Check cuboid.
+	bool CheckFrustumC(Box cuboid);
+	// Check sphere.
+	bool CheckFrustumS(Point center, float radius);
 
 	// Get the position, target and rotarion of the camera.
-	XMFLOAT3 GetPosition();
+	Point GetPosition();
 	XMFLOAT3 GetRotation();
 	XMFLOAT3 GetFocus();
 
@@ -37,14 +55,16 @@ public:
 	void Update();
 	// Get the updated view matrix after the update function has been called.
 	void GetViewMatrix(XMMATRIX &viewMatrix);
+	// Get the updated projection matrix after the update function has been called.
+	void GetProjectionMatrix(XMMATRIX &projMatrix);
+	// Get the ortho matrix.
+	void GetOrthoMatrix(XMMATRIX &orthoMatrix);
 
-	using spCamera = std::shared_ptr<Camera>;
-	static spCamera Create(const XMFLOAT3& pos, const XMFLOAT3& focus, const XMFLOAT3& up, float angle, float aspRadio, float nearZ, float farZ);
 private:
-	XMFLOAT3 position, rotation, up, focus;
-	XMFLOAT4X4 viewMat, projMat;
-	float fovAngle, aspRadio, nearZ, farZ;
-
+	XMFLOAT3 m_position, m_rotation, m_up, m_focus;
+	XMFLOAT4X4 m_viewMat, m_projMat, m_orthoMat;
+	float m_fovAngle, m_aspRadio, m_nearZ, m_farZ;
+	ViewFrustum m_viewFrustum;
 };
 
 #endif // !_CAMERA_H_

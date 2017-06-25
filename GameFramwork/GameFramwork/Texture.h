@@ -9,8 +9,7 @@
 
 // Include
 #include <d3d11.h>
-#include <string>
-#include <fstream>
+
 using namespace std;
 
 // Texture class
@@ -41,7 +40,6 @@ private:
 
 	ID3D11Texture2D* m_texture;
 	ID3D11ShaderResourceView* m_textureView;
-	//unsigned char* imageData;
 };
 
 #endif // !_TEXTURE_H_

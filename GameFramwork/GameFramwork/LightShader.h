@@ -44,7 +44,7 @@ public:
 
 	bool Initialize();
 	void Shutdown();
-	bool Render(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection);
+	bool Render(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection, const MaterialType material);
 
 private:
 	ID3D11VertexShader* m_vertexShader;
@@ -59,7 +59,7 @@ private:
 	void ShutdownShader();
 	void OutputShaderErrorMessage(ID3DBlob* errorMsg, TCHAR* shaderPath);
 
-	bool SetShaderParameter(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection);
+	bool SetShaderParameter(const Mesh* mesh, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& project, ID3D11ShaderResourceView* shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection, const MaterialType material);
 	void RenderShader(const int indexCount);
 };
 

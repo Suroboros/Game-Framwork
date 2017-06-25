@@ -37,7 +37,8 @@ class WindowMain
 
 	
 public:
-	
+	// Run flag
+	bool runFlag;
 
 	bool Initialize(HINSTANCE hInstance, HINSTANCE hPrevInstance, PTSTR pCmdLine, int nCmdShow);
 	void Run();
@@ -71,11 +72,6 @@ private:
 };
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-/////////////
-// GLOBALS 
-/////////////
-//static WindowMain* ApplicationHandle = nullptr;
 
 #endif
 

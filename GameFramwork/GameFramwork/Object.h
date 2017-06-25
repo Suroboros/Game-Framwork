@@ -11,17 +11,16 @@ class Object
 public:
 	Object();
 	Object(const Object&);
-	~Object();
+	virtual ~Object();
 
-	bool Initialize();
-	void Shutdown();
+	virtual bool Initialize() = 0;
+	virtual void Shutdown() = 0;
 
-	void Render2D();
-	void Render3D();
-	void Update();
+	virtual void Render2D() = 0;
+	virtual void Render3D() = 0;
+	virtual void Update() = 0;
 
 	Point pos;
-	float speedX, speedY;
 };
 
 #endif // !_OBJECT_H_

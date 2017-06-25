@@ -4,6 +4,8 @@
 /////////////////////////////////////
 #include "Mesh.h"
 #include "D3DClass.h"
+#include <fstream>
+#include <string>
 
 Mesh::Mesh()
 {
@@ -21,13 +23,8 @@ Mesh::~Mesh()
 
 bool Mesh::InitializeBuffers()
 {
-	//VertexDataType* vertices;
-	//unsigned long* indices;
-	//ID3D11Buffer *vertexBuffer[2] = {nullptr,nullptr}, *indexBuffer;
-	
 	HRESULT hr;
 
-	
 	// Setup the description of the vertex buffer.
 	D3D11_BUFFER_DESC vbDesc;
 	vbDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -95,7 +92,6 @@ void Mesh::ShutdownBuffer()
 void Mesh::RenderBuffers()
 {
 	// Set vertex buffer stride and offset
-
 	UINT strides = sizeof(VertexDataType);
 	UINT offsets = 0;
 
@@ -127,6 +123,10 @@ bool Model::Initialize(TCHAR* meshPath, TCHAR* texPath)
 	// Load mesh
 	result = LoadFromObj(meshPath);
 	if(!result)
+		return false;
+
+	result = LoadMtl();
+	if (!result)
 		return false;
 
 	// Load texture if texture is setted
@@ -327,6 +327,78 @@ bool Model::LoadFromObj(TCHAR* filePath)
 
 bool Model::LoadMtl()
 {
+	ifstream fin;
+	string input, input2;
+	MaterialType material;
+	string newmtl;
+
+	// Open file
+	fin.open(m_mtlPath, ios::in);
+	if (fin.fail())
+	{
+		MessageBox(nullptr, _T("Can't open material file"), _T("Error"), MB_OK);
+		return false;
+	}
+	
+	// Read data
+	while (!fin.eof() && fin.peek() != EOF)
+	{
+		
+		fin >> input;
+
+		// Read comment
+		if (input.compare("#") == 0)
+			fin.ignore(256, '\n');
+
+		// Read material name
+		if (input.compare("newmtl") == 0)
+			fin >> newmtl;
+		else
+			continue;
+
+		// Read material data
+		while(input.compare("\n")!=0 && (!fin.eof() && fin.peek() != EOF))
+		{
+			fin >> input;
+			// Read ambient color
+			if (input.compare("Ka") == 0)
+			{
+				
+				fin >> material.ambient.x >> material.ambient.y >> material.ambient.z >> material.ambient.w;
+			}
+
+			// Read diffuse color
+			if (input.compare("Kd") == 0)
+			{
+				fin >> material.diffuse.x >> material.diffuse.y >> material.diffuse.z >> material.diffuse.w;
+			}
+
+			// Read specular color
+			if (input.compare("Ks") == 0)
+			{
+				fin >> material.specular.x >> material.specular.y >> material.specular.z;
+			}
+
+			// Read specular power
+			if (input.compare("Ns") == 0)
+			{
+				fin >> material.specularPower;
+			}
+
+			// Read comment
+			if (input.compare("#") == 0)
+			{
+				fin.ignore(256, '\n');
+				continue;
+			}
+			fin.get();
+			input = fin.peek();
+			//fin >> input;
+		}
+		m_materials.insert(pair<string, MaterialType>(newmtl, material));
+	}
+	// Close file
+	fin.close();
 
 	return true;
 }
@@ -368,7 +440,7 @@ void Model::ReleaseTexture()
 bool Model::WriteMesh()
 {
 	// Write mtl file path
-	m_mtlPath = m_objData.mtllib;
+	m_mtlPath = "./data/model/" + m_objData.mtllib;
 
 	// Write vertex information
 	for(auto group : m_objData.groups)

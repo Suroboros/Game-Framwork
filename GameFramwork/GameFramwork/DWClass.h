@@ -8,7 +8,6 @@
 #define _DWCLASS_H_
 
 // Link 
-
 #pragma comment(lib, "dwrite.lib")
 
 // Include
@@ -22,12 +21,11 @@ public:
 	bool Initialize();
 	void Shutdown();
 
+	// Get the instance of DWClass(singleton) 
 	static DWClass& GetInstance();
 
 	IDWriteTextFormat* CreateTextFormat(TCHAR* font, FLOAT size);
 
-	// Get the instance of D3DClass(singleton) 
-	//static D2DClass& GetInstance();
 private:
 	DWClass();
 	DWClass(const DWClass&);

@@ -21,7 +21,9 @@ public:
 	bool Initialize();
 	void Shutdown();
 
+	// Make depth buffer valid
 	void DepthBufferOn();
+	// Make depth buffer invalid
 	void DepthBufferOff();
 
 private:

@@ -8,7 +8,6 @@ D2DClass::D2DClass()
 	m_deviceContext = nullptr;
 	m_dxgiDevice = nullptr;
 	m_swapChain = nullptr;
-	m_renderTarget = nullptr;
 	m_bitmap = nullptr;
 
 }
@@ -78,7 +77,6 @@ bool D2DClass::Initialize()
 
 
 	// Set render target
-	//hr = m_factory->CreateDxgiSurfaceRenderTarget(backBufferPtr, &prop, &m_renderTarget);
 	hr = m_deviceContext->CreateBitmapFromDxgiSurface(backBufferPtr, &bitmapProperties, &m_bitmap);
 	if(FAILED(hr))
 		return false;
@@ -100,13 +98,6 @@ void D2DClass::Shutdown()
 	{
 		m_bitmap->Release();
 		m_bitmap = nullptr;
-	}
-
-	// Release render target
-	if(m_renderTarget)
-	{
-		m_renderTarget->Release();
-		m_renderTarget = nullptr;
 	}
 
 	// Release device context
@@ -146,21 +137,12 @@ D2DClass & D2DClass::GetInstance()
 
 void D2DClass::BeginDraw()
 {
-	//m_renderTarget->Clear();
-	//m_renderTarget->BeginDraw();
 	m_deviceContext->BeginDraw();
 }
 
 void D2DClass::EndDraw()
 {
-	//m_renderTarget->EndDraw();
 	m_deviceContext->EndDraw();
-
-}
-
-ID2D1RenderTarget * D2DClass::GetRenderTarget()
-{
-	return m_renderTarget;
 }
 
 ID2D1DeviceContext* D2DClass::GetDeviceContext()
@@ -170,13 +152,7 @@ ID2D1DeviceContext* D2DClass::GetDeviceContext()
 
 ID2D1SolidColorBrush* D2DClass::CreateBrush(float r, float g, float b, float a)
 {
-	//m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(r, g, b, a), &m_solidColorBrush);
 	m_deviceContext->CreateSolidColorBrush(D2D1::ColorF(r, g, b, a), &m_solidColorBrush);
 	return m_solidColorBrush;
 }
 
-void D2DClass::DrawCircle(float x, float y, float r)
-{
-	m_deviceContext->DrawLine(D2D1::Point2F(x - 10.0f,y), D2D1::Point2F( x + 10.0f,y), CreateBrush(1.0, 0.0, 0.0, 0.0), 10);
-
-}

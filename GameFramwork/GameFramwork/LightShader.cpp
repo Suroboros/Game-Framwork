@@ -35,12 +35,12 @@ void LightShader::Shutdown()
 	ShutdownShader();
 }
 
-bool LightShader::Render(const Mesh* mesh, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & projection, ID3D11ShaderResourceView * texture, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection)
+bool LightShader::Render(const Mesh* mesh, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & projection, ID3D11ShaderResourceView * texture, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection, const MaterialType material)
 {
 	bool result;
 
 	// Set the shader parameters for rendering
-	result = SetShaderParameter(mesh, world, view, projection, texture, color, direction, viewDirection);
+	result = SetShaderParameter(mesh, world, view, projection, texture, color, direction, viewDirection, material);
 	if(!result)
 		return false;
 
@@ -272,7 +272,7 @@ void LightShader::OutputShaderErrorMessage(ID3DBlob * errorMsg, TCHAR * shaderPa
 
 }
 
-bool LightShader::SetShaderParameter(const Mesh* mesh, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & project, ID3D11ShaderResourceView * shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection)
+bool LightShader::SetShaderParameter(const Mesh* mesh, const XMMATRIX & world, const XMMATRIX & view, const XMMATRIX & project, ID3D11ShaderResourceView * shaderRsrcView, const XMFLOAT4 color, const XMFLOAT3 direction, const XMFLOAT3 viewDirection, const MaterialType material)
 {
 	HRESULT hr;
 
@@ -342,10 +342,10 @@ bool LightShader::SetShaderParameter(const Mesh* mesh, const XMMATRIX & world, c
 	materialData = (MaterialType*)mappedResource.pData;
 
 	// Copy data
-	materialData->ambient = XMFLOAT4(0.15f, 0.15f, 0.15f, 1.0f);
-	materialData->diffuse = XMFLOAT4(1, 1, 1, 1);
-	materialData->specular = XMFLOAT3(1, 1, 1);
-	materialData->specularPower = 32.0f;
+	materialData->ambient = material.ambient;
+	materialData->diffuse = material.diffuse;
+	materialData->specular = material.specular;
+	materialData->specularPower = material.specularPower;
 
 	// Unlock the constant buffer
 	D3DClass::GetInstance().GetDeviceContext()->Unmap(m_materialBuffer, 0);
@@ -354,8 +354,6 @@ bool LightShader::SetShaderParameter(const Mesh* mesh, const XMMATRIX & world, c
 	D3DClass::GetInstance().GetDeviceContext()->PSSetConstantBuffers(0, 1, &m_lightBuffer);
 	D3DClass::GetInstance().GetDeviceContext()->PSSetConstantBuffers(1, 1, &m_materialBuffer);
 	
-
-
 	return true;
 }
 

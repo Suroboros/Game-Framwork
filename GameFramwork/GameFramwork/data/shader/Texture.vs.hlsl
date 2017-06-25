@@ -32,9 +32,9 @@ PixelInputType TextureVertexShader(VertexInputType input)
 	float4 pos4 = float4(input.position, 1.0f);
 
 	// Coordinate transformation
-//	output.position = mul(pos4, worldMatrix);
-	output.position = mul(pos4, viewMatrix);
-	output.position = mul(output.position, projectionMatrix);
+	//output.position = mul(pos4, worldMatrix);
+	//output.position = mul(output.position, viewMatrix);
+	output.position = mul(pos4, projectionMatrix);
 
 	// Store the texture coordinates
 	output.tex = input.tex;

@@ -8,13 +8,10 @@
 #define _MESH_H_
 
 // Include
-#include <fstream>
-#include <string>
 #include <vector>
+#include <map>
 #include <d3d11.h>
-#include <directxmath.h>
 #include <DirectXMath.h>
-#include <Windows.h>
 #include <tchar.h>
 #include "Texture.h"
 using namespace std;
@@ -56,8 +53,6 @@ public:
 	vector<VertexDataType> m_data;
 	// Index data
 	vector<unsigned int> m_indices;
-	// Material
-	MaterialType m_meterial;
 
 	// Initialize the vertex and index buffers.
 	bool InitializeBuffers();
@@ -108,7 +103,11 @@ public:
 	Model(Model& model);
 	~Model();
 
+	// Model
 	vector<Mesh*> m_model;
+	// Materials
+	map<string, MaterialType> m_materials;
+	// Size of model
 	float m_width, m_height, m_depth;
 
 	bool Initialize(TCHAR* meshPath, TCHAR* texPath = nullptr);
@@ -118,13 +117,12 @@ public:
 	int GetIndexCount();
 	ID3D11ShaderResourceView* GetTexture();
 
-	
-
 private:
 	// Obj data
 	OBJDataType m_objData;
 	// Material file path
 	string m_mtlPath;
+	// Texture
 	Texture* m_texture;
 
 	// Divide the index from the f string
@@ -140,8 +138,5 @@ private:
 	void ReleaseTexture();
 
 };
-
-
-
 
 #endif // !_MESH_H_

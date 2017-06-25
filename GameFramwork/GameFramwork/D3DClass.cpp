@@ -15,7 +15,6 @@ D3DClass::D3DClass()
 	m_swapChain = nullptr;
 	m_renderTargetView = nullptr;
 	m_depthBuffer = nullptr;
-	//depthStencilState = nullptr;
 	m_depthStencilView = nullptr;
 	m_rasterizerState = nullptr;
 	m_effect = nullptr;
@@ -48,7 +47,9 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 	hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&factory);
 	if(FAILED(hr))
 		return false;
-
+	hr = factory->MakeWindowAssociation(WindowMain::GetInstance().GetHwnd(), 0);
+	if(FAILED(hr))
+		return false;
 	// Get the graphics interface(video card)
 	IDXGIAdapter* adapter = nullptr;
 	if(factory->EnumAdapters(0, &adapter) == DXGI_ERROR_NOT_FOUND)
@@ -74,7 +75,7 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 		return false;
 
 	// Find matched screen width and height, then store the numerator and denominator of the refresh rate.
-	UINT numerator, denominator;
+	UINT numerator = 60, denominator = 1;
 	for(int i = 0; i < static_cast<int>(numModes); ++i)
 	{
 		if(displayModeList[i].Width == static_cast<UINT>(screenWidth))
@@ -221,17 +222,6 @@ bool D3DClass::Initialize(bool vsync, bool fullCreen, float screenDepth, float s
 	viewPort[0].MaxDepth = 1.0f;
 	// Create the viewport
 	m_deviceContext->RSSetViewports(_countof(viewPort), viewPort);
-
-	// Setup the projection matrix
-	float fieldOfView = XM_PI / 4.0f;
-	float screenAspect = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth));
-
-	// Initialize the world matrix
-	XMStoreFloat4x4(&m_worldMatrix, XMMatrixIdentity());
-
-	// Create the orthographic projection matrix for 2D rendering
-	XMStoreFloat4x4(&m_orthoMatrix, XMMatrixOrthographicLH(static_cast<float>(screenWidth), static_cast<float>(screenHeight), screenNear, screenDepth));
 	
 	// Create the effect object
 	m_effect = new Effect;
@@ -269,12 +259,6 @@ void D3DClass::Shutdown()
 		m_depthStencilView = nullptr;
 	}
 
-/*	if(depthStencilState)
-	{
-		depthStencilState->Release();
-		depthStencilState = nullptr;
-	}
-*/
 	if(m_depthBuffer)
 	{
 		m_depthBuffer->Release();
@@ -354,6 +338,117 @@ void D3DClass::EndScene()
 	return;
 }
 
+bool D3DClass::Resize()
+{
+	if (!m_swapChain)
+		return true;
+
+	HRESULT hr;
+	//int screenWidth = WindowMain::GetInstance().GetScreenWidth();
+	//int screenHeight = WindowMain::GetInstance().GetScreenHeight();
+	// Release render target view
+	
+	m_deviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+	
+	D2DClass::GetInstance().GetDeviceContext()->SetTarget(nullptr);
+
+	ID3D11Resource* backBuffer;
+	m_renderTargetView->GetResource(&backBuffer);
+	((ID3D11Texture2D*)backBuffer)->Release();
+	m_renderTargetView->Release();
+	m_renderTargetView = nullptr;
+
+	m_depthBuffer->Release();
+	m_depthBuffer = nullptr;
+	
+	m_depthStencilView->Release();
+	m_depthStencilView = nullptr;
+	m_rasterizerState->Release();
+	m_rasterizerState = nullptr;
+	m_deviceContext->Flush();
+	// Resize backbuffer
+	hr = m_swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+	if (FAILED(hr))
+		return false;
+
+	// Get the back buffer pointer and set it as target view.
+	ID3D11Texture2D* backBufferPtr;
+	hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBufferPtr);
+	if (FAILED(hr))
+		return false;
+	hr = m_device->CreateRenderTargetView(backBufferPtr, NULL, &m_renderTargetView);
+	// Release the back buffer because we no longer need it.
+	backBufferPtr->Release();
+	backBufferPtr = nullptr;
+	if (FAILED(hr))
+		return false;
+	// Set render target
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, NULL);
+
+	// Create depth buffer
+	D3D11_TEXTURE2D_DESC depthBufferDesc;
+	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+	depthBufferDesc.Width = WindowMain::GetInstance().GetScreenWidth();
+	depthBufferDesc.Height = WindowMain::GetInstance().GetScreenHeight();
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.ArraySize = 1;
+	depthBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthBufferDesc.CPUAccessFlags = 0;
+	depthBufferDesc.MiscFlags = 0;
+	hr = m_device->CreateTexture2D(&depthBufferDesc, NULL, &m_depthBuffer);
+	if (FAILED(hr))
+		return false;
+
+	// Create depth stencil view
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	depthStencilViewDesc.Format = depthBufferDesc.Format;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
+	depthStencilViewDesc.Flags = 0;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+	hr = m_device->CreateDepthStencilView(m_depthBuffer, &depthStencilViewDesc, &m_depthStencilView);
+	if (FAILED(hr))
+		return false;
+
+	// Bind the render target view and depth stencil buffer to the output render pipeline.
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+	// Setup the raster descripthion which will determine how and what polygons will be drawn
+	D3D11_RASTERIZER_DESC rasterDesc;
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+	// Create the rasterizer state
+	hr = m_device->CreateRasterizerState(&rasterDesc, &m_rasterizerState);
+	if (FAILED(hr))
+		return false;
+	// Set the rasterizer state
+	m_deviceContext->RSSetState(m_rasterizerState);
+
+	// Setup the viewport for rendering
+	D3D11_VIEWPORT viewPort[1];
+	viewPort[0].Width = static_cast<FLOAT>(WindowMain::GetInstance().GetScreenWidth());
+	viewPort[0].Height = static_cast<FLOAT>(WindowMain::GetInstance().GetScreenHeight());
+	viewPort[0].TopLeftX = 0.0f;
+	viewPort[0].TopLeftY = 0.0f;
+	viewPort[0].MinDepth = 0.0f;
+	viewPort[0].MaxDepth = 1.0f;
+	// Create the viewport
+	m_deviceContext->RSSetViewports(_countof(viewPort), viewPort);
+	
+	return true;
+}
+
 ID3D11Device * D3DClass::GetDevice()
 {
 	return m_device;
@@ -367,19 +462,4 @@ ID3D11DeviceContext * D3DClass::GetDeviceContext()
 IDXGISwapChain * D3DClass::GetSwapChain()
 {
 	return m_swapChain;
-}
-
-void D3DClass::GetWorldMatrix(XMMATRIX & world)
-{
-	world = XMLoadFloat4x4(&m_worldMatrix);
-}
-
-void D3DClass::GetProjectionMatrix(XMMATRIX & projection)
-{
-	projection = XMLoadFloat4x4(&m_projectionMatrix);
-}
-
-void D3DClass::GetOrthoMatrix(XMMATRIX & ortho)
-{
-	ortho = XMLoadFloat4x4(&m_orthoMatrix);
 }

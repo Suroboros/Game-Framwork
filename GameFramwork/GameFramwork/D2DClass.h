@@ -29,11 +29,10 @@ public:
 
 	void BeginDraw();
 	void EndDraw();
-	ID2D1RenderTarget* GetRenderTarget();
+
 	ID2D1DeviceContext* GetDeviceContext();
 
 	ID2D1SolidColorBrush* CreateBrush(float r, float g, float b, float a);
-	void DrawCircle(float x, float y, float r);
 
 private:
 	D2DClass();
@@ -48,13 +47,9 @@ private:
 	ID2D1DeviceContext* m_deviceContext;
 	IDXGIDevice* m_dxgiDevice;
 	IDXGISwapChain* m_swapChain;
-	ID2D1RenderTarget* m_renderTarget;
 
 	ID2D1SolidColorBrush* m_solidColorBrush;
 	ID2D1Bitmap1* m_bitmap;
-
-	ID2D1EllipseGeometry *m_pEllipseGeometry;
-
 
 	Font* font;
 	

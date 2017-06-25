@@ -3,8 +3,6 @@
 InputDevice::InputDevice()
 {
 	m_inputDevice = nullptr;
-	m_curState = State::OFF;
-	m_preState = State::OFF;
 }
 
 InputDevice::InputDevice(const InputDevice &)

@@ -30,8 +30,8 @@ bool MouseDevice::Initialize()
 	if(FAILED(hr))
 		return false;
 
-	// Set the cooperative level to not share with other program
-	hr = m_inputDevice->SetCooperativeLevel(WindowMain::GetInstance().GetHwnd(), DISCL_FOREGROUND | DISCL_EXCLUSIVE);
+	// Set the cooperative level
+	hr = m_inputDevice->SetCooperativeLevel(WindowMain::GetInstance().GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 	if(FAILED(hr))
 		return false;
 
@@ -49,10 +49,9 @@ bool MouseDevice::Initialize()
 bool MouseDevice::Update()
 {
 	HRESULT hr;
-
 	// Store previous state
 	std::memcpy(&m_preState, &m_curState, sizeof(m_curState));
-
+	
 	// Read mouse device
 	hr = m_inputDevice->GetDeviceState(sizeof(m_curState), (LPVOID)&m_curState);
 	if(FAILED(hr))
@@ -65,18 +64,17 @@ bool MouseDevice::Update()
 		else
 			return false;
 	}
-
-	// Update the position of mouse
-	m_posX += m_curState.lX;
-	m_posY += m_curState.lY;
-
-	// Ensure the mouse location doesn`t exceed the screen width or height
-	if(m_posX < 0)m_posX = 0;
-	if(m_posY < 0)m_posY = 0;
-	if(m_posX > WindowMain::GetInstance().GetScreenWidth())
-		m_posX = WindowMain::GetInstance().GetScreenWidth();
-	if(m_posY > WindowMain::GetInstance().GetScreenHeight())
-		m_posY = WindowMain::GetInstance().GetScreenHeight();
+	
+	// Get mouse position.
+	GetCursorPos(&m_pos);
+	// Convert screen position to client window position.
+	ScreenToClient(WindowMain::GetInstance().GetHwnd(), &m_pos);
+	// Get client size
+	RECT windowRect;
+	GetClientRect(WindowMain::GetInstance().GetHwnd(), &windowRect);
+	// Fix mouse position. FixedPos = UnfixedPos * backBufferSize / clientSize
+	m_pos.x = m_pos.x*static_cast<LONG>(static_cast<float>(WindowMain::GetInstance().GetScreenWidth()) / static_cast<float>(windowRect.right - windowRect.left));
+	m_pos.y = m_pos.y*static_cast<LONG>(static_cast<float>(WindowMain::GetInstance().GetScreenHeight()) / static_cast<float>(windowRect.bottom - windowRect.top));
 
 	return true;
 }

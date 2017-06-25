@@ -61,35 +61,37 @@ float4 LightPixelShader(PixelInputType input):SV_TARGET
 	ambient = float4(ambientColor.r*lightColor.r, ambientColor.g*lightColor.g, ambientColor.b*lightColor.b, lightColor.a);
 
 	// Initialize the specular color
-	specular = float4(0, 0, 0, 0);
+	specular = float4(specularColor.r, specularColor.g, specularColor.b, 1);
 
 	// Invert the light direction
 	dir=-lightDirection;
 	
 	// Calculate the amount of light on this pixel
-	lightIntensity=saturate(dot(input.normal,dir));
+	lightIntensity = max(dot(normalize(input.normal), normalize(dir)), 0);
 	
 	//
 //	if(lightIntensity > 0.0f)
 	{
 		// Calculate the final diffuse color
-		diffuse = diffuse*lightIntensity;
-
-		// Saturate the color
-		diffuse = saturate(diffuse);
+		diffuse = diffuse*saturate(lightIntensity);
 
 		// Calculate the reflection vector
-		//reflection = normalize(2 * lightIntensity*input.normal - dir);
+		//reflection = normalize(2 * lightIntensity*normalize(input.normal) - normalize(dir));
 		reflection = reflect(lightDirection, input.normal);
+		reflection = normalize(reflection);
 		// Calculate specular light
-		specular = pow(saturate(dot(reflection, viewDirection)), specularPow)*lightColor;
+		float specularLight = pow(saturate(max(dot(normalize(viewDirection), reflection),0)), specularPow);
+		if(lightIntensity <= 0)specularLight = 0;
+		//specularLight = 0;
+		specular = specular*specularLight;
+
 	}
 
 	// Saturate the color
 	//color = saturate(color);
 	
 	// Multiply the texture pixel and the color
-	color = (ambient + diffuse +specular)*texColor;
+	color = (ambient + diffuse + specular)*texColor;
 
 	// Add the specular light
 	//color = saturate(color + specular);

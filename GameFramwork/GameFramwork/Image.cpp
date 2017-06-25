@@ -194,8 +194,8 @@ bool Image::UpdateBuffer(int posX, int posY)
 	Rect imgRect;
 	imgRect.left = static_cast<float>(((m_screenWidth / 2)*-1) + static_cast<float>(posX));
 	imgRect.top = static_cast<float>((m_screenHeight / 2) - static_cast<float>(posY));
-	imgRect.right = imgRect.left + static_cast<float>(m_imageWidth);
-	imgRect.bottom = imgRect.top - static_cast<float>(m_imageHeight);
+	imgRect.width = static_cast<float>(m_imageWidth);
+	imgRect.height =  - static_cast<float>(m_imageHeight);
 
 	// Create the vertex array
 	ImageVertexType* vertices = new ImageVertexType[m_vertexCount];
@@ -205,15 +205,15 @@ bool Image::UpdateBuffer(int posX, int posY)
 	// Setup the vertex array
 	vertices[0].pos = XMFLOAT3(imgRect.left, imgRect.top, 0.0f);
 	vertices[0].tex = XMFLOAT2(0.0f, 0.0f);
-	vertices[1].pos = XMFLOAT3(imgRect.right, imgRect.bottom, 0.0f);
+	vertices[1].pos = XMFLOAT3(imgRect.left + imgRect.width, imgRect.top + imgRect.height , 0.0f);
 	vertices[1].tex = XMFLOAT2(1.0f, 1.0f);
-	vertices[2].pos = XMFLOAT3(imgRect.left, imgRect.bottom, 0.0f);
+	vertices[2].pos = XMFLOAT3(imgRect.left, imgRect.top + imgRect.height, 0.0f);
 	vertices[2].tex = XMFLOAT2(0.0f, 1.0f);
 	vertices[3].pos = XMFLOAT3(imgRect.left, imgRect.top, 0.0f);
 	vertices[3].tex = XMFLOAT2(0.0f, 0.0f);
-	vertices[4].pos = XMFLOAT3(imgRect.right, imgRect.top, 0.0f);
+	vertices[4].pos = XMFLOAT3(imgRect.left + imgRect.width, imgRect.top, 0.0f);
 	vertices[4].tex = XMFLOAT2(1.0f, 0.0f);
-	vertices[5].pos = XMFLOAT3(imgRect.right, imgRect.bottom, 0.0f);
+	vertices[5].pos = XMFLOAT3(imgRect.left + imgRect.width, imgRect.top + imgRect.height, 0.0f);
 	vertices[5].tex = XMFLOAT2(1.0f, 1.0f);
 
 	// Lock the vertex buffer
@@ -242,7 +242,6 @@ bool Image::UpdateBuffer(int posX, int posY)
 void Image::RenderBuffers()
 {
 	// Set vertex buffer stride and offset
-
 	UINT strides = sizeof(ImageVertexType);
 	UINT offsets = 0;
 

@@ -25,12 +25,13 @@ public :
 
 	static Font& GetInstance();
 
-	void CreateText(TCHAR* text, TCHAR* font, FLOAT size, Color color, Rect box);
+	void CreateText(char* text, TCHAR* font, FLOAT size, Color color, Rect box);
 
-	
-	
 private:
-	
+	Font();
+	Font(const Font&);
+	~Font();
+	Font& operator=(const Font&);
 };
 
 #endif // !_FONT_H_

@@ -14,11 +14,10 @@
 #include "D2DClass.h"
 #include "GameEngine.h"
 
-#pragma once
 /////////////
-// GLOBALS //
+// GLOBALS 
 /////////////
-const bool FULLSCREEN = false;
+static bool FULLSCREEN = false;
 const bool VSYNC_ENABLED = true;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
@@ -38,14 +37,6 @@ public:
 private:
 	bool Render();
 
-private:
-	//D3DClass* D3DObject;
-	
-	
-
-public:
-
-	Font* font;
 };
 
 #endif 
